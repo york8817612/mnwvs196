@@ -2,6 +2,7 @@
 #include "..\Common\Net\InPacket.h"
 #include "..\Common\Net\OutPacket.h"
 #include "..\Common\Net\PacketFlags\ClientPacketFlags.hpp"
+#include "..\Common\Net\PacketFlags\MobPacketFlags.hpp"
 
 #include "User.h"
 #include "MobTemplate.h"
@@ -503,7 +504,7 @@ void LifePool::OnMobPacket(User * pUser, int nType, InPacket * iPacket)
 	if (mobIter != m_aMobGen.end()) {
 		switch (nType)
 		{
-		case 0x369:
+		case MobRecvPacketFlag::CP_MobMove:
 			m_pField->OnMobMove(pUser, mobIter->second, iPacket);
 			break;
 		}

@@ -6,7 +6,7 @@
 #include "..\WvsLib\WzResMan.hpp"
 #include "SkillLevelData.h"
 #include <thread>
-#include "..\EquationEvaluator\Evaluator.h"
+#include "Utility\EquationEvaluator\Evaluator.h"
 
 SkillInfo::SkillInfo()
 {

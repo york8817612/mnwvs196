@@ -123,6 +123,7 @@ int Script::SelfAskAvatar(lua_State * L)
 	self->m_pUser->SendPacket(&oPacket);
 	self->Wait();
 	lua_pushinteger(L, self->m_nUserInput);
+	return 1;
 }
 
 int Script::SelfAskText(lua_State * L)

@@ -13,7 +13,6 @@
     <ClCompile Include="lvm.cpp" />
     <ClCompile Include="lutf8lib.cpp" />
     <ClCompile Include="lundump.cpp" />
-    <ClCompile Include="luac.cpp" />
     <ClCompile Include="ltm.cpp" />
     <ClCompile Include="ltablib.cpp" />
     <ClCompile Include="ldblib.cpp" />
@@ -36,6 +35,7 @@
     <ClCompile Include="lstring.cpp" />
     <ClCompile Include="lstrlib.cpp" />
     <ClCompile Include="ltable.cpp" />
+    <ClCompile Include="luac.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lcode.h" />

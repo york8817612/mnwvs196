@@ -73,6 +73,9 @@
     <Filter Include="WvsGame\InGame\Script">
       <UniqueIdentifier>{f1354e9d-9bbb-4208-ac5e-75e8952995d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common\Utility\EquationEvaluator">
+      <UniqueIdentifier>{f88b0d94-2b98-41a9-8cf6-dcb52fd95eef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -148,9 +151,6 @@
       <Filter>WvsGame\InGame\User</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Net\PacketFlags\UserPacketFlags.h">
-      <Filter>Common\Net\PacketFlags</Filter>
-    </ClInclude>
-    <ClInclude Include="MobPacketFlags.h">
       <Filter>Common\Net\PacketFlags</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Net\PacketFlags\LoginPacketFlags.hpp">
@@ -285,6 +285,15 @@
     <ClInclude Include="QWUQuestRecord.h">
       <Filter>WvsGame\InGame\Quest</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\Net\PacketFlags\MobPacketFlags.hpp">
+      <Filter>Common\Net\PacketFlags</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\EquationEvaluator\Evaluator.h">
+      <Filter>Common\Utility\EquationEvaluator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\EquationEvaluator\exprtk.hpp">
+      <Filter>Common\Utility\EquationEvaluator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -337,9 +346,6 @@
       <Filter>WvsGame\InGame\User</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Net\PacketFlags\UserPacketFlags.cpp">
-      <Filter>Common\Net\PacketFlags</Filter>
-    </ClCompile>
-    <ClCompile Include="MobPacketFlags.cpp">
       <Filter>Common\Net\PacketFlags</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Net\PacketFlags\LoginPacketFlags.cpp">
@@ -446,6 +452,12 @@
     </ClCompile>
     <ClCompile Include="QWUQuestRecord.cpp">
       <Filter>WvsGame\InGame\Quest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Net\PacketFlags\MobPacketFlags.cpp">
+      <Filter>Common\Net\PacketFlags</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\EquationEvaluator\Evaluator.cpp">
+      <Filter>Common\Utility\EquationEvaluator</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

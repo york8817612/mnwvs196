@@ -138,7 +138,7 @@ void File::Directory(Node n) {
     vector<Node> dirs;
     n.Reserve(count);
     for (int i = 0; i < count; ++i) {
-        char * name;
+		char * name = "";
         uint8_t type = file.Read<uint8_t>();
         if (type == 1) {
             file.Skip(10);
@@ -181,19 +181,31 @@ void Load(string name) {
 }
 
 void Init(bool lazy) {
-    GenKeys();
-    Lazy = lazy;
-    for (path p : Paths) {
-        Path = p;
-        /*if (exists(Path / path("Data.wz"))) {
-            Load("Data");
-            return;
-        }*/
-        if (exists(Path / path("Base.wz"))) {
-            Load("Base");
-            return;
-        }
-    }
+	GenKeys();
+	Lazy = lazy;
+	
+
+	Path = Paths[0];
+	/*if (exists(Path / path("Data.wz"))) {
+	Load("Data");
+	return;
+	}*/
+	if (exists(Path / path("Base.wz"))) {
+		Load("Base");
+		return;
+	}
+    
+	//for (path p : Paths) {
+ //       Path = p;
+ //       /*if (exists(Path / path("Data.wz"))) {
+ //           Load("Data");
+ //           return;
+ //       }*/
+ //       if (exists(Path / path("Base.wz"))) {
+ //           Load("Base");
+ //           return;
+ //       }
+ //   }
     die();
 }
 

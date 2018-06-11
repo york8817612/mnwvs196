@@ -100,14 +100,15 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Foundation\include;I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Data\include;I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Data\MySQL\include;..\Common\</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>G:\mnwvs196\Poco\Foundation\include;G:\mnwvs196\Poco\Data\include;G:\mnwvs196\Poco\Data\MySQL\include;..\Common\;G:\mnwvs196\Boost</AdditionalIncludeDirectories>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Foundation;I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Foundation\x64\release_static_md;I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\lib;..\Common;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>G:\楓之谷私服\mnwvs196\x64\Debug;G:\mnwvs196\Poco\lib64;G:\mnwvs196\Boost\lib64-msvc-14.0;..\Common;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ScriptLib.lib;WvsLib.lib;DataBase.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -163,12 +164,15 @@
     <ClInclude Include="..\Common\Net\PacketFlags\FieldPacketFlags.hpp" />
     <ClInclude Include="..\Common\Net\PacketFlags\GamePacketFlags.hpp" />
     <ClInclude Include="..\Common\Net\PacketFlags\LoginPacketFlags.hpp" />
+    <ClInclude Include="..\Common\Net\PacketFlags\MobPacketFlags.hpp" />
     <ClInclude Include="..\Common\Net\PacketFlags\PacketFlags.hpp" />
     <ClInclude Include="..\Common\Net\PacketFlags\UserPacketFlags.h" />
     <ClInclude Include="..\Common\Net\SocketBase.h" />
     <ClInclude Include="..\Common\Net\WorldInfo.h" />
     <ClInclude Include="..\Common\Net\WvsBase.h" />
     <ClInclude Include="..\Common\Utility\DateTime\GameDateTime.h" />
+    <ClInclude Include="..\Common\Utility\EquationEvaluator\Evaluator.h" />
+    <ClInclude Include="..\Common\Utility\EquationEvaluator\exprtk.hpp" />
     <ClInclude Include="..\Common\Utility\Random\Rand32.h" />
     <ClInclude Include="..\Common\Utility\String\StringUtility.cpp" />
     <ClInclude Include="..\Common\Utility\Task\AsnycScheduler.h" />
@@ -192,7 +196,6 @@
     <ClInclude Include="ItemInfo.h" />
     <ClInclude Include="LifePool.h" />
     <ClInclude Include="Mob.h" />
-    <ClInclude Include="MobPacketFlags.h" />
     <ClInclude Include="MobTemplate.h" />
     <ClInclude Include="MovePath.h" />
     <ClInclude Include="NPC.h" />
@@ -229,10 +232,12 @@
     <ClCompile Include="..\Common\Net\PacketFlags\ClientPacketFlags.cpp" />
     <ClCompile Include="..\Common\Net\PacketFlags\GamePacketFlags.cpp" />
     <ClCompile Include="..\Common\Net\PacketFlags\LoginPacketFlags.cpp" />
+    <ClCompile Include="..\Common\Net\PacketFlags\MobPacketFlags.cpp" />
     <ClCompile Include="..\Common\Net\PacketFlags\UserPacketFlags.cpp" />
     <ClCompile Include="..\Common\Net\SocketBase.cpp" />
     <ClCompile Include="..\Common\Net\WvsBase.cpp" />
     <ClCompile Include="..\Common\Utility\DateTime\GameDateTime.cpp" />
+    <ClCompile Include="..\Common\Utility\EquationEvaluator\Evaluator.cpp" />
     <ClCompile Include="..\Common\Utility\Random\Rand32.cpp" />
     <ClCompile Include="..\Common\Utility\Task\AsnycScheduler.cpp" />
     <ClCompile Include="AttackInfo.cpp" />
@@ -251,7 +256,6 @@
     <ClCompile Include="LifePool.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mob.cpp" />
-    <ClCompile Include="MobPacketFlags.cpp" />
     <ClCompile Include="MobTemplate.cpp" />
     <ClCompile Include="MovePath.cpp" />
     <ClCompile Include="NPC.cpp" />
