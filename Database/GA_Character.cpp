@@ -1,6 +1,7 @@
 #include "GA_Character.hpp"
 #include "WvsUnified.h"
 #include "..\Common\Net\OutPacket.h"
+#include "..\WvsGame\WvsGameConstants.hpp"
 #include "GW_ItemSlotEquip.h"
 #include "GW_ItemSlotBundle.h"
 #include "GW_CharacterStat.h"
@@ -31,8 +32,9 @@ GA_Character::~GA_Character()
 	delete mMoney;
 	for (auto& slot : mItemSlot)
 	{
-		for (auto& pItem : slot)
-			delete pItem.second;
+		// TODO: is_block_type_valid(header->_block_use)
+		/*for (auto& pItem : slot)
+			delete pItem.second;*/
 	}
 
 	for (auto& skill : mSkillRecord)
@@ -50,19 +52,20 @@ void GA_Character::Load(int nCharacterID)
 
 void GA_Character::LoadAvatar(int nCharacterID)
 {
-	mAvatarData->Load(nCharacterID);
+	this->nCharacterID = nCharacterID;
 	mStat->Load(nCharacterID);
 	mLevel->Load(nCharacterID);
+	mAvatarData->Load(this);
+
 
 	Poco::Data::Statement queryStatement(GET_DB_SESSION);
 	queryStatement << "SELECT * FROM Characters Where CharacterID = " << nCharacterID;
 	Poco::Data::RecordSet recordSet(queryStatement);
 	queryStatement.execute();
-	this->nCharacterID = nCharacterID;
+	
 	nAccountID = recordSet["AccountID"];
 	nWorldID = recordSet["WorldID"];
 	strName = recordSet["CharacterName"].toString();
-	nFame = recordSet["Fame"];
 	nGuildID = recordSet["GuildID"];
 	nPartyID = recordSet["PartyID"];
 	nFieldID = recordSet["FieldID"];
@@ -86,12 +89,11 @@ void GA_Character::EncodeStat(OutPacket *oPacket)
 	oPacket->Encode1(mStat->nSkin);
 	oPacket->Encode4(mStat->nFace);
 	oPacket->Encode4(mStat->nHair);
-	oPacket->Encode1((char)0xFF);
-	oPacket->Encode1(0);
-	oPacket->Encode1(0);
-	oPacket->Encode1(mLevel->nLevel); //LEVEL
+	oPacket->Encode1(nMixBaseHairColor);
+	oPacket->Encode1(nMixAddHairColor);
+	oPacket->Encode1(nMixHairBaseProb);
+	oPacket->Encode1(mLevel->nLevel);
 	oPacket->Encode2(mStat->nJob);
-
 	oPacket->Encode2(mStat->nStr);
 	oPacket->Encode2(mStat->nDex);
 	oPacket->Encode2(mStat->nInt);
@@ -100,45 +102,60 @@ void GA_Character::EncodeStat(OutPacket *oPacket)
 	oPacket->Encode4(mStat->nMaxHP);
 	oPacket->Encode4(mStat->nMP);
 	oPacket->Encode4(mStat->nMaxMP);
-
 	oPacket->Encode2(mStat->nAP);
+
 	mStat->EncodeExtendSP(oPacket);
-	//oPacket->Encode1(0); //SP
 
-	oPacket->Encode8(mStat->nExp); //EXP
-	oPacket->Encode4(nFame);
-	oPacket->Encode4(0);
-	oPacket->Encode8(0); //Gach EXP
-	oPacket->Encode8(-1); //
+	oPacket->Encode8(mStat->nExp);
+	oPacket->Encode4(mStat->nPOP);
+	oPacket->Encode4(nWP);
+	oPacket->Encode8(mStat->nGachaponExp); //Gach EXP
+	oPacket->Encode4(CURRENT_SYSTEM_TIME.dwHighDateTime);
+	oPacket->Encode4(CURRENT_SYSTEM_TIME.dwLowDateTime);
 	oPacket->Encode4(nFieldID);
-	oPacket->Encode1(0); //Inital Spawn Point
-	oPacket->Encode2(0); //Get Subcategory
+	oPacket->Encode1(nPortal); //Inital Spawn Point
+	oPacket->Encode2(mStat->nSubJob); //Get Subcategory
 
-	//isDemonSlayer || isXenon || isDemonAvenger Encode4
+	if (WvsGameConstants::IsDslayerJobBorn(mStat->nJob)
+		|| WvsGameConstants::IsResHybridJob(mStat->nJob)
+		|| WvsGameConstants::IsBeastTamerJob(mStat->nJob))
+	{
+		oPacket->Encode4(nDefFaceAcc);
+	}
 
-	oPacket->Encode1(0); //Fatigue
-	oPacket->Encode4(0);
+	oPacket->Encode1(nFatigue);
+	oPacket->Encode4(0); // nLastFatigueUpdateTime
 
-	for (int i = 0; i < 6; ++i)
-		oPacket->Encode4(0);
+	oPacket->Encode4(mStat->nCharismaEXP);
+	oPacket->Encode4(mStat->nInsightEXP);
+	oPacket->Encode4(mStat->nWillEXP);
+	oPacket->Encode4(mStat->nCraftEXP);
+	oPacket->Encode4(mStat->nSenseEXP);
+	oPacket->Encode4(mStat->nCharmEXP);
+
 	for (int i = 0; i < 6; ++i)
 		oPacket->Encode2(0);
-	oPacket->Encode1(0);
-	oPacket->Encode8(-1);
-
-	oPacket->Encode4(0); //PVP EXP
-	oPacket->Encode1(0); //PVP RANK
-	oPacket->Encode4(0); //BATTLE POINTS
-	oPacket->Encode1(0x05);
-	oPacket->Encode1(0x06);
-	oPacket->Encode4(0);
 
 	oPacket->Encode1(0);
-	oPacket->Encode4(0);
-	oPacket->Encode8(-4);
-	oPacket->Encode4(0);
-	oPacket->Encode1(0);
+	oPacket->Encode4(CURRENT_SYSTEM_TIME.dwHighDateTime);
+	oPacket->Encode4(CURRENT_SYSTEM_TIME.dwLowDateTime);
 
+	oPacket->Encode4(0); // nPvPExp
+	oPacket->Encode1(0); // nPvPGrade
+	oPacket->Encode4(0); // nPvPPoint
+	oPacket->Encode1(0x05); // nPvPModeLevel
+	oPacket->Encode1(0x06); // nPvPModeType
+	oPacket->Encode4(0); // nEventPoint
+	oPacket->Encode4(0);
+
+	// TODO: Part Time Job.
+	oPacket->Encode1(0); // nAlbaActivityID
+	oPacket->Encode4(DB_DATE_20790101_23.dwLowDateTime);
+	oPacket->Encode4(DB_DATE_20790101_23.dwHighDateTime);
+	oPacket->Encode4(0); // nAlbaDuration
+	oPacket->Encode1(0); // bAlbaSpecialReward
+
+	// TODO: CHARACTERCARD::Decode
 	for (int i = 0; i < 9; ++i)
 	{
 		oPacket->Encode4(0);
@@ -146,13 +163,16 @@ void GA_Character::EncodeStat(OutPacket *oPacket)
 		oPacket->Encode4(0);
 	}
 
-	oPacket->Encode8(0);
+	oPacket->Encode4(0/*ftLastLogout.dwHighDateTime*/);
+	oPacket->Encode4(0/*ftLastLogout.dwLowDateTime*/);
+
+	// Unk Function
 	oPacket->Encode8(0);
 	oPacket->Encode8(0);
 	oPacket->Encode4(0);
 	oPacket->Encode4(0);
 	oPacket->Encode4(0);
-	oPacket->Encode1(0);
+	oPacket->Encode1(1); // bBurning??
 
 	for (int i = 0; i < 25; ++i)
 		oPacket->Encode1(0);
@@ -176,52 +196,7 @@ void GA_Character::EncodeSkillRecord(OutPacket * oPacket)
 
 void GA_Character::EncodeAvatarLook(OutPacket *oPacket)
 {
-	oPacket->Encode1(nGender);
-	oPacket->Encode1(mAvatarData->nSkin);
-	oPacket->Encode4(mAvatarData->nFace);
-	oPacket->Encode4(mStat->nJob);
-	oPacket->Encode1(0); //Mega?
-	oPacket->Encode4(mAvatarData->nHair);
-
-	for (const auto& eqp : mAvatarData->aHairEquip)
-	{
-		oPacket->Encode1(eqp.nPOS * -1);
-		oPacket->Encode4(eqp.nItemID);
-	}
-	oPacket->Encode1((char)0xFF);
-	for (const auto& eqp : mAvatarData->aUnseenEquip)
-	{
-		oPacket->Encode1((eqp.nPOS * -1) - 100);
-		oPacket->Encode4(eqp.nItemID);
-	}
-	oPacket->Encode1((char)0xFF);
-	oPacket->Encode1((char)0xFF); //totem
-
-	int cWeaponIdx = -1, weaponIdx = -1, nShieldIdx = -1;
-	for (int i = 0; i < mAvatarData->aHairEquip.size(); ++i)
-		if (mAvatarData->aHairEquip[i].nPOS == -111)
-			cWeaponIdx = i;
-		else if (mAvatarData->aHairEquip[i].nPOS == -11)
-			weaponIdx = i;
-		else if (mAvatarData->aHairEquip[i].nPOS == -10)
-			nShieldIdx = i;
-
-	oPacket->Encode4(cWeaponIdx == -1 ? 0 : mAvatarData->aHairEquip[cWeaponIdx].nItemID);
-	oPacket->Encode4(weaponIdx == -1 ? 0 : mAvatarData->aHairEquip[weaponIdx].nItemID);
-	oPacket->Encode4(nShieldIdx == -1 ? 0 : mAvatarData->aHairEquip[nShieldIdx].nItemID);
-
-	oPacket->Encode1(0);
-	oPacket->Encode4(0);
-	oPacket->Encode4(0);
-	oPacket->Encode4(0);
-
-	//isDemonSlayer || isXenon || isDemonAvenger oPacket->Encode4(0);
-	//isZero oPacket->Encode1(0)
-
-	oPacket->Encode1(0);
-	oPacket->Encode1(0);
-	oPacket->Encode1(0);
-	oPacket->Encode4(0);
+	mAvatarData->Encode(oPacket);
 }
 
 void GA_Character::Save(bool isNewCharacter)
@@ -240,12 +215,11 @@ void GA_Character::Save(bool isNewCharacter)
 		<< "WorldID = '" << nWorldID << "', "
 		<< "Gender = '" << nGender << "', "
 		<< "CharacterName = '" << strName << "', "
-		<< "Fame = '" << nFame << "', "
 		<< "GuildID = '" << nGuildID << "', "
 		<< "PartyID = '" << nPartyID << "', "
 		<< "FieldID = '" << nFieldID << "' WHERE CharacterID = " << nCharacterID;
 	queryStatement.execute();
-	mAvatarData->Save(nCharacterID, isNewCharacter);
+	mAvatarData->Save(this, isNewCharacter);
 	mMoney->Save(nCharacterID, isNewCharacter);
 	mLevel->Save(nCharacterID, isNewCharacter);
 	mStat->Save(nCharacterID, isNewCharacter);
@@ -756,7 +730,7 @@ void GA_Character::DecodeStat(InPacket *iPacket)
 	//iPacket->Decode1(); //SP
 
 	mStat->nExp = iPacket->Decode8(); //EXP
-	nFame = iPacket->Decode4();
+	mStat->nPOP = iPacket->Decode4();
 	iPacket->Decode4();
 	iPacket->Decode8(); //Gach EXP
 	iPacket->Decode8(); //
@@ -1294,12 +1268,12 @@ void GA_Character::EncodeInventoryData(OutPacket *oPacket)
 GA_Character::ATOMIC_COUNT_TYPE GA_Character::InitCharacterID()
 {
 	Poco::Data::Statement queryStatement(GET_DB_SESSION);
-	queryStatement << "SELECT MAX(CharacterID) From Characters";
+	queryStatement << "SELECT IFNULL((SELECT MAX(CharacterID) From Characters),(0)) As Totle";
 	queryStatement.execute();
 	Poco::Data::RecordSet recordSet(queryStatement);
 	if (recordSet.rowCount() == 0)
 		return 0;
-	return (ATOMIC_COUNT_TYPE)recordSet["MAX(CharacterID)"];
+	return (ATOMIC_COUNT_TYPE)recordSet["Totle"];
 }
 
 void GA_Character::LoadItemSlot()

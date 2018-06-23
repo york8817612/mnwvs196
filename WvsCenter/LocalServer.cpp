@@ -1,14 +1,14 @@
 
-#include "..\Database\CharacterDBAccessor.h"
+#include "../Database/CharacterDBAccessor.h"
 #include "LocalServer.h"
-#include "Net\InPacket.h"
-#include "Net\OutPacket.h"
+#include "Net/InPacket.h"
+#include "Net/OutPacket.h"
 
-#include "Net\PacketFlags\LoginPacketFlags.hpp"
-#include "Net\PacketFlags\CenterPacketFlags.hpp"
-#include "Net\PacketFlags\GamePacketFlags.hpp"
+#include "Net/PacketFlags/LoginPacketFlags.hpp"
+#include "Net/PacketFlags/CenterPacketFlags.hpp"
+#include "Net/PacketFlags/GamePacketFlags.hpp"
 
-#include "Constants\ServerConstants.hpp"
+#include "Constants/ServerConstants.hpp"
 #include "WvsCenter.h"
 
 

@@ -4,6 +4,7 @@
 ///////////////////////////////////
 
 #include "wzmain.hpp"
+#include <emmintrin.h>
 
 namespace WZ {
 uint8_t * Key = 0;

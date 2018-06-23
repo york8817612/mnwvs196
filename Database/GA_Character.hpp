@@ -36,10 +36,28 @@ private:
 	void LoadQuestRecord();
 
 public:
+	char nMixBaseHairColor = 0xFF,
+		nMixAddHairColor = 0,
+		nMixHairBaseProb = 0,
+		nMixedHairColor = 0,
+		nMixHairPercent = 0;
 
-	unsigned char nGender;
-	int nWorldID, nAccountID, nFame, nGuildID, nPartyID, nFieldID, nCharacterID;
-	std::string strName;
+	unsigned char nGender = 10,
+		nFatigue = 0,
+		nPortal = 0;
+
+	int nWorldID = 0,
+		nAccountID = 0,
+		nGuildID = 0,
+		nPartyID = 0,
+		nFieldID = 0,
+		nCharacterID = 0, 
+		nWP = 0,
+		nDefFaceAcc = 0;
+
+	std::string strName = "";
+
+	/*FILETIME ftLastLogout;*/
 
 	GW_Avatar *mAvatarData = nullptr;
 	GW_CharacterStat *mStat = nullptr;
@@ -92,4 +110,5 @@ public:
 	void RemoveQuest(int nKey);
 
 	std::mutex& GetCharacterDatLock();
+
 };

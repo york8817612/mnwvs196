@@ -12,6 +12,7 @@
 #include "..\Common\Net\PacketFlags\ClientPacketFlags.hpp"
 #include "..\Common\Net\PacketFlags\GamePacketFlags.hpp"
 #include "..\Common\Net\PacketFlags\UserPacketFlags.h"
+#include "..\Common\Net\PacketFlags\WvsContextPacketFlags.hpp"
 
 #include "FieldMan.h"
 #include "Portal.h"
@@ -696,8 +697,12 @@ void User::ResetTemporaryStat(int tCur, int nReasonID)
 
 void User::MigrateOut()
 {
+	pCharacterData->Save();
 	LeaveField();
-	pSocket->GetSocket().close();
+	OutPacket oPacket;
+	oPacket.Encode2(WvsContextPacketFlag::SP_ReturnToTitle);
+	SendPacket(&oPacket);
+
 }
 
 User * User::FindUser(int nUserID)

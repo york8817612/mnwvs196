@@ -33,7 +33,7 @@ void WvsGame::ConnectToCenter(int nCenterIdx)
 void WvsGame::CenterAliveMonitor()
 {
 	printf("=================定期檢查Center Server連線程序=================\n");
-	if (aCenterPtr && aCenterPtr->GetWorldInfo().bConnectionFailed) 
+	if (aCenterPtr && !aCenterPtr->GetWorldInfo().bIsConnected)
 	{
 		printf("Center Server %d 尚未連線，嘗試重新連線。\n", 0);
 		aCenterPtr.reset();

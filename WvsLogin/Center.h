@@ -44,6 +44,7 @@ public:
 
 	void OnUpdateWorldInfo(InPacket *iPacket);
 	void OnCharacterListResponse(InPacket *iPacket);
+	void Center::OnCharacterCreateResponse(InPacket *iPacket);
 	void OnGameServerInfoResponse(InPacket *iPacket);
 
 	static void OnNotifyCenterDisconnected(SocketBase *pSocket)

@@ -23,8 +23,13 @@ MAKE_LOGIN_PACKET_FLAG(WorldInformationResponse, 0x01);
 MAKE_LOGIN_PACKET_FLAG(ClientSelectWorldResult, 0x06);
 MAKE_LOGIN_PACKET_FLAG(ClientSelectCharacterResult, 0x07);
 MAKE_LOGIN_PACKET_FLAG(ClientCheckDuplicatedIDResult, 0x0A);
+MAKE_LOGIN_PACKET_FLAG(ClientCreateNewCharacterResult, 0x0B);
+MAKE_LOGIN_PACKET_FLAG(ClientDeleteCharacterResult, 0x0C);
+MAKE_LOGIN_PACKET_FLAG(ClientChangeSPWResult, 0x1A);
 MAKE_LOGIN_PACKET_FLAG(ClientSecondPasswordResult, 0x1B);
 MAKE_LOGIN_PACKET_FLAG(ClientChannelBackgroundResponse, 0x23);
+MAKE_LOGIN_PACKET_FLAG(ClientChooseGender, 0x24);
+MAKE_LOGIN_PACKET_FLAG(ClientGenderSet, 0x25);
 MAKE_LOGIN_PACKET_FLAG(ClientLoginBackgroundResponse, 0x2A);
 MAKE_LOGIN_PACKET_FLAG(ClientStartResponse, 0x2F);
 

@@ -459,5 +459,8 @@
     <ClCompile Include="..\Common\Utility\EquationEvaluator\Evaluator.cpp">
       <Filter>Common\Utility\EquationEvaluator</Filter>
     </ClCompile>
+    <ClCompile Include="ItemDataPath.cpp">
+      <Filter>WvsGame\InGame\Inventory</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

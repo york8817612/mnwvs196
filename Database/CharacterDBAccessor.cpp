@@ -5,10 +5,10 @@
 #include "GW_CharacterLevel.h"
 #include "GW_Avatar.hpp"
 
-#include "..\Common\Net\InPacket.h"
-#include "..\Common\Net\OutPacket.h"
-#include "..\Common\Net\SocketBase.h"
-#include "..\Common\Net\PacketFlags\CenterPacketFlags.hpp"
+#include "../Common/Net/InPacket.h"
+#include "../Common/Net/OutPacket.h"
+#include "../Common/Net/SocketBase.h"
+#include "../Common/Net/PacketFlags/CenterPacketFlags.hpp"
 
 #include "GW_CharacterList.hpp"
 #include "GA_Character.hpp"
@@ -56,7 +56,7 @@ void CharacterDBAccessor::PostCreateNewCharacterRequest(SocketBase *pSrv, int uL
 	chrEntry.nGender = nGender;
 
 	chrEntry.nFieldID = 100000000;
-	chrEntry.nGuildID = chrEntry.nPartyID = chrEntry.nFame = 0;
+	chrEntry.nGuildID = chrEntry.nPartyID = chrEntry.mStat->nPOP = 0;
 	
 	chrEntry.mAvatarData->nFace = nFace;
 	chrEntry.mAvatarData->nHair = nHair;
@@ -116,7 +116,19 @@ void CharacterDBAccessor::PostCreateNewCharacterRequest(SocketBase *pSrv, int uL
 	for (int i = 0; i < nEquipCount; ++i)
 		if (equips[i]->nItemID > 0)
 			chrEntry.mItemSlot[1].insert({ equips[i]->nPOS, equips[i] });
+
 	chrEntry.Save(true);
+
+	OutPacket oPacket;
+
+	oPacket.Encode2(CenterPacketFlag::CharacterCreateResponse);
+	oPacket.Encode4(uLocalSocketSN);
+	chrEntry.LoadAvatar(chrEntry.nCharacterID);
+	chrEntry.EncodeAvatar(&oPacket);
+	oPacket.Encode1(0);
+	oPacket.Encode1(0); // Ranking
+
+	pSrv->SendPacket(&oPacket);
 }
 
 void CharacterDBAccessor::GetDefaultCharacterStat(int *aStat)

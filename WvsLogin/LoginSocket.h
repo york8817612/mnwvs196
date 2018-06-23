@@ -7,7 +7,8 @@ class LoginSocket :
 private:
 	struct LoginData
 	{
-		int nAccountID;
+		//TODO: AccountId ³]©w
+		int nAccountID = 1;
 		std::string strAccountName;
 		unsigned char nLoginState;
 	} mLoginData;

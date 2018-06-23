@@ -100,7 +100,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING;_SILENCE_TR2_NAMESPACE_DEPRECATION_WARNING;_SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING;_SCL_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>G:\mnwvs196\Poco\Foundation\include;G:\mnwvs196\Poco\Data\include;G:\mnwvs196\Poco\Data\MySQL\include;..\Common\;G:\mnwvs196\Boost</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -252,6 +252,7 @@
     <ClCompile Include="FieldMan.cpp" />
     <ClCompile Include="FieldObj.cpp" />
     <ClCompile Include="InventoryManipulator.cpp" />
+    <ClCompile Include="ItemDataPath.cpp" />
     <ClCompile Include="ItemInfo.cpp" />
     <ClCompile Include="LifePool.cpp" />
     <ClCompile Include="main.cpp" />

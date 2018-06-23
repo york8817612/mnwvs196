@@ -9,7 +9,7 @@ private:
 	struct CenterInfo
 	{
 		int nCenterID;
-		bool bIsConnected = false, bConnectionFailed = false;
+		bool bIsConnected = false;
 	};
 
 	int nCenterIndex;
@@ -33,7 +33,7 @@ public:
 	}
 
 	bool IsConnected() const { return mWorldInfo.bIsConnected; }
-	bool IsConnectionFailed() const { return mWorldInfo.bConnectionFailed; }
+	bool IsConnectionFailed() const { return !mWorldInfo.bIsConnected; }
 
 	void SetCenterIndex(int idx);
 
@@ -45,7 +45,6 @@ public:
 	{
 		printf("[WvsLogin][Center]與Center Server中斷連線。\n");
 		((Center*)pSocket)->mWorldInfo.bIsConnected = false;
-		((Center*)pSocket)->mWorldInfo.bConnectionFailed = true;
 	}
 };
 

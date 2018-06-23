@@ -99,6 +99,9 @@ void Center::OnPacket(InPacket *iPacket)
 	case CenterPacketFlag::CharacterListResponse:
 		OnCharacterListResponse(iPacket);
 		break;
+	case CenterPacketFlag::CharacterCreateResponse:
+		OnCharacterCreateResponse(iPacket);
+		break;
 	case CenterPacketFlag::GameServerInfoResponse:
 		OnGameServerInfoResponse(iPacket);
 
@@ -170,6 +173,23 @@ void Center::OnCharacterListResponse(InPacket *iPacket)
 		oPacket.Encode2(0);
 	oPacket.Encode4(0);
 	oPacket.Encode8(0);
+	pSocket->SendPacket(&oPacket);
+}
+
+void Center::OnCharacterCreateResponse(InPacket *iPacket)
+{
+	int nLoginSocketID = iPacket->Decode4();
+	auto pSocket = WvsBase::GetInstance<WvsLogin>()->GetSocketList()[nLoginSocketID];
+	OutPacket oPacket;
+	oPacket.Encode2(LoginPacketFlag::ClientCreateNewCharacterResult);
+	oPacket.Encode1(0);
+
+	printf("[WvsLogin][Center::OnCharacterCreateResponse]玩家建立角色封包 : ");
+	iPacket->Print();
+	printf("\n");
+
+	oPacket.EncodeBuffer(iPacket->GetPacket() + 6, iPacket->GetPacketSize() - 6);
+
 	pSocket->SendPacket(&oPacket);
 }
 

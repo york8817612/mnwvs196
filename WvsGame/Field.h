@@ -54,7 +54,8 @@ class Field
 		pField->Update();
 	}
 
-	std::_Binder<std::_Unforced, void(*)(Field* pField), Field* const> m_updateBinder;
+	//std::_Binder<std::_Unforced, void(*)(Field* pField), Field* const> m_updateBinder;
+	std::function<void(Field*)> m_updateBinder;
 	AsnycScheduler::AsnycScheduler<decltype(m_updateBinder)>* m_asyncUpdateTimer;
 
 public:

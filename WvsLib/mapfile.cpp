@@ -8,6 +8,7 @@
 #include "Memory\MemoryPoolMan.hpp"
 #include "wzmain.hpp"
 #include <iostream>
+#include <emmintrin.h>
 
 char * ToString(int n) {
 #pragma warning(disable:4267) 

@@ -246,15 +246,16 @@ void Field::SplitSendPacket(OutPacket *oPacket, User *pExcept)
 void Field::OnPacket(User* pUser, InPacket *iPacket)
 {
 	int nType = iPacket->Decode2();
-	if (nType >= 0x369 && nType <= 0x384)
-		m_pLifePool->OnPacket(pUser, nType, iPacket);
-	else if (nType == 0x38B)
-		m_pDropPool->OnPacket(pUser, nType, iPacket);
-	//if(nHeader >= )
-	/*if (nHeader >= MobRecvPacketFlag::MobRecvPacketFlag::minFlag && nHeader <= MobRecvPacketFlag::MobRecvPacketFlag::maxFlag)
+	
+	if (nType >= MobRecvPacketFlag::MobRecvPacketFlag::minFlag && nType <= MobRecvPacketFlag::MobRecvPacketFlag::maxFlag)
 	{
-		printf("Mob Packet Received %d.\n", (int)nHeader);
-	}*/
+		//printf("Mob Packet Received %d.\n", (int)nType);
+		m_pLifePool->OnPacket(pUser, nType, iPacket);
+	}
+	else if (nType == 0x38B)
+	{
+		m_pDropPool->OnPacket(pUser, nType, iPacket);
+	}
 
 }
 

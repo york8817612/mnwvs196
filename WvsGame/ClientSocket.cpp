@@ -27,7 +27,7 @@ void ClientSocket::OnPacket(InPacket *iPacket)
 	int nType = (unsigned short)iPacket->Decode2();
 	switch (nType)
 	{
-	case ClientPacketFlag::ClientMigrateIn:
+	case ClientPacketFlag::CP_MigrateIn:
 		OnMigrateIn(iPacket);
 		break;
 	default:

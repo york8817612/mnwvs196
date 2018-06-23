@@ -86,6 +86,7 @@ void GW_CharacterStat::Load(int nCharacterID)
 	nCharismaEXP = recordSet["CharismaEXP"];
 	nInsightEXP = recordSet["InsightEXP"];
 	nWillEXP = recordSet["WillEXP"];
+	nCraftEXP = recordSet["CraftEXP"];
 	nSenseEXP = recordSet["SenseEXP"];
 	nCharmEXP = recordSet["CharmEXP"];
 }

@@ -25,32 +25,35 @@ void LoginSocket::OnPacket(InPacket *iPacket)
 
 	switch (nType)
 	{
-	case ClientPacketFlag::ClientRequestStart:
+	case ClientPacketFlag::CP_RequestStart:
 		OnClientRequestStart();
 		break;
-	case ClientPacketFlag::ClientLoginBackgroundRequest:
+	case ClientPacketFlag::CP_LoginBackgroundRequest:
 		OnLoginBackgroundRequest();
 		break;
-	case ClientPacketFlag::ClientCheckPasswordRequest:
+	case ClientPacketFlag::CP_CheckPasswordRequest:
 		OnCheckPasswordRequst(iPacket);
 		break;
-	case ClientPacketFlag::ClientSelectWorld:
+	case ClientPacketFlag::CP_SelectWorld:
 		OnClientSelectWorld(iPacket);
 		break;
-	case ClientPacketFlag::ClientSecondPasswordCheck:
+	case ClientPacketFlag::CP_SecondPasswordCheck:
 		OnClientSecondPasswdCheck();
 		break;
-	case ClientPacketFlag::ClientCheckDuplicatedID:
+	case ClientPacketFlag::CP_CheckDuplicatedID:
 		OnClientCheckDuplicatedID(iPacket);
 		break;
-	case ClientPacketFlag::ClientCreateNewCharactar:
+	case ClientPacketFlag::CP_CreateNewCharactar:
 		OnClientCreateNewCharacter(iPacket);
 		break;
-	case ClientPacketFlag::ClientSelectCharacter:
+	case ClientPacketFlag::CP_SelectCharacter:
+	case ClientPacketFlag::CP_DirectGoToField:
 		OnClientSelectCharacter(iPacket);
 		break;
-	case ClientPacketFlag::ClientRequestServerList:
+	case ClientPacketFlag::CP_RequestServerList:
 		SendWorldInformation();
+		break;
+	case ClientPacketFlag::CP_DeleteCharacter:
 		break;
 	}
 }

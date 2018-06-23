@@ -86,6 +86,21 @@ namespace WvsGameConstants
 		return result;
 	}
 
+	static bool IsDslayerJobBorn(int nJob)
+	{
+		return nJob / 100 == 31 || nJob == 3001;
+	}
+
+	static bool IsResHybridJob(int nJob)
+	{
+		return nJob / 100 == 36 || nJob == 3002;
+	}
+
+	static bool IsBeastTamerJob(int nJob)
+	{
+		return nJob / 100 == 112 || nJob == 11000;
+	}
+
 	static bool IsDualJob(int nJob)
 	{
 		return nJob / 100 == 22 || nJob == 2001;
@@ -657,11 +672,6 @@ namespace WvsGameConstants
 	static bool IsJettJob(int nJob)
 	{
 		return nJob / 10 == 57 || nJob == 508;
-	}
-
-	static bool IsBeastTamerJob(int nJob)
-	{
-		return nJob / 1000 == 11;
 	}
 
 	static bool IsPinkBeanJob(int nJob)

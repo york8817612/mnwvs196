@@ -81,9 +81,18 @@ void SkillInfo::IterateSkillInfo()
 		if (continued)
 			continue;
 		nRootID = atoi(str.c_str());
-		//LoadSkillRoot(nRootID, (void*)(&node["skill"]));
-		std::thread t(&SkillInfo::LoadSkillRoot, this, nRootID, (void*)(&node["skill"]));
-		t.detach();
+		switch (nRootID) {
+		case 2300:
+		case 2310:
+		case 2311:
+		case 2312:
+		{
+			LoadSkillRoot(nRootID, (void*)(&node["skill"]));
+			//std::thread t(&SkillInfo::LoadSkillRoot, this, nRootID, (void*)(&node["skill"]));
+			//t.detach();
+			break;
+		}
+		}
 	}
 	//printf("[SkillInfo::IterateSkillInfo]技能資訊載入完畢 IterateSkillInfo End.\n");
 }

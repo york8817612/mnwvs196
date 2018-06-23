@@ -24,7 +24,7 @@ namespace AsnycScheduler
 			auto call = new concurrency::call<int>(
 				[__instancePtr, tce](int)
 			{
-				__instancePtr->mFunc();
+				__instancePtr->mFunc(nullptr);
 				tce.set();
 			});
 

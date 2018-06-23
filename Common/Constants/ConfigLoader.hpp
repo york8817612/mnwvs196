@@ -83,7 +83,7 @@ public:
 	{
 		auto findResult = aSettings.find(key);
 		if (findResult == aSettings.end())
-			return 0;
+			return std::string("");
 		return findResult->second.sValue;
 	}
 
