@@ -3,6 +3,7 @@
 #include "..\Common\Net\OutPacket.h"
 #include "..\Common\Net\PacketFlags\ClientPacketFlags.hpp"
 #include "..\Common\Net\PacketFlags\MobPacketFlags.hpp"
+#include "..\Common\Net\PacketFlags\UserPacketFlags.h"
 
 #include "User.h"
 #include "MobTemplate.h"
@@ -364,7 +365,7 @@ void LifePool::OnUserAttack(User * pUser, const SkillEntry * pSkill, AttackInfo 
 
 void LifePool::EncodeAttackInfo(User * pUser, AttackInfo * pInfo, OutPacket * oPacket)
 {
-	oPacket->Encode2(pInfo->m_nType - ClientPacketFlag::OnUserAttack_MeleeAttack + 0x296);
+	oPacket->Encode2(pInfo->m_nType - ClientPacketFlag::OnUserAttack_MeleeAttack + UserPacketFlag::SP_UserMeleeAttack);
 	oPacket->Encode4(pUser->GetUserID());
 	oPacket->Encode1(0);
 	oPacket->Encode1(pInfo->m_bAttackInfoFlag);

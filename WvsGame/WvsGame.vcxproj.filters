@@ -294,6 +294,15 @@
     <ClInclude Include="..\Common\Utility\EquationEvaluator\exprtk.hpp">
       <Filter>Common\Utility\EquationEvaluator</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\Net\PacketFlags\WvsContextPacketFlags.hpp">
+      <Filter>Common\Net\PacketFlags</Filter>
+    </ClInclude>
+    <ClInclude Include="MobStat.h">
+      <Filter>WvsGame\InGame\Field\Life\Mob</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Net\PacketFlags\EPacketFlags.h">
+      <Filter>Common\Net\PacketFlags</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -461,6 +470,12 @@
     </ClCompile>
     <ClCompile Include="ItemDataPath.cpp">
       <Filter>WvsGame\InGame\Inventory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Net\PacketFlags\WvsContextPacketFlags.cpp">
+      <Filter>Common\Net\PacketFlags</Filter>
+    </ClCompile>
+    <ClCompile Include="MobStat.cpp">
+      <Filter>WvsGame\InGame\Field\Life\Mob</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

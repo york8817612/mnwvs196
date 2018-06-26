@@ -39,6 +39,43 @@ public:
 		BS_TrainLimit = 0x4000000
 	};
 
+	// ©x¤è¨ú±o
+	enum CharacterStatFlag
+	{
+		CS_SKIN = 0x1,
+		CS_FACE = 0x2,
+		CS_HAIR = 0x4,
+		CS_PETSN_UNUSED = 0x8,
+		CS_LEV = 0x10,
+		CS_JOB = 0x20,
+		CS_STR = 0x40,
+		CS_DEX = 0x80,
+		CS_INT = 0x100,
+		CS_LUK = 0x200,
+		CS_HP = 0x400,
+		CS_MHP = 0x800,
+		CS_MP = 0x1000,
+		CS_MMP = 0x2000,
+		CS_AP = 0x4000,
+		CS_SP = 0x8000,
+		CS_EXP = 0x10000,
+		CS_POP = 0x20000,
+		CS_MONEY = 0x40000,
+		CS_FATIGUE = 0x80000,
+		CS_CHARISMAEXP = 0x100000,
+		CS_INSIGHTEXP = 0x200000,
+		CS_WILLEXP = 0x400000,
+		CS_CRAFTEXP = 0x800000,
+		CS_SENSEEXP = 0x1000000,
+		CS_CHARMEXP = 0x2000000,
+		CS_NCSLIMIT = 0x4000000,
+		CS_ALBA = 0x8000000,
+		CS_CHARCARD = 0x10000000,
+		CS_PVP = 0x20000000,
+		CS_PVPMODELEVEL = 0x40000000,
+		CS_EVENT_POINT = 0x80000000,
+	};
+
 	class BasicStatRateOption
 	{
 	public:

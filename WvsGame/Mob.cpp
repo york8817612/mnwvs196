@@ -9,6 +9,7 @@
 #include "Net\OutPacket.h"
 #include "Net\PacketFlags\MobPacketFlags.hpp"
 #include "Net\PacketFlags\ClientPacketFlags.hpp"
+#include "Net\PacketFlags\EPacketFlags.h"
 #include "ItemInfo.h"
 #include "QWUser.h"
 #include "Field.h"
@@ -23,14 +24,14 @@ Mob::~Mob()
 
 void Mob::MakeEnterFieldPacket(OutPacket *oPacket)
 {
-	oPacket->Encode2(MobSendPacketFlag::SP_MobEnterField); //MobPool::SpawnMonster
+	oPacket->Encode2(EPacketFlags::SERVER_PACKET::LP_MobEnterField); //MobPool::SpawnMonster
 	oPacket->Encode1(0);
 	EncodeInitData(oPacket);
 }
 
 void Mob::MakeLeaveFieldPacket(OutPacket * oPacket)
 {
-	oPacket->Encode2(MobSendPacketFlag::SP_MobLeaveField); //MobPool::SpawnMonster
+	oPacket->Encode2(EPacketFlags::SERVER_PACKET::LP_MobLeaveField); //MobPool::SpawnMonster
 	oPacket->Encode4(GetFieldObjectID());
 	oPacket->Encode1(1);
 }
@@ -62,7 +63,11 @@ void Mob::EncodeInitData(OutPacket *oPacket, bool bIsControl)
 	}
 	oPacket->EncodeBuffer(nullptr, 12);
 
+	auto msFlag = MobStat::TS_Flag::GetDefault();
+
+	mStat->EncodeTemporary(oPacket, msFlag);
 	//MobStat::EncodeTemporary
+
 	oPacket->Encode2(GetPosX());
 	oPacket->Encode2(GetPosY());
 	oPacket->Encode1(GetMoveAction()); // m_bMoveAction
@@ -168,7 +173,7 @@ void Mob::SendChangeControllerPacket(User* pUser, int nLevel)
 	if (nLevel)
 	{
 		OutPacket oPacket;
-		oPacket.Encode2(MobSendPacketFlag::SP_MobChangeController);
+		oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_MobChangeController);
 		oPacket.Encode1(nLevel);
 		EncodeInitData(&oPacket, true);
 		pUser->SendPacket(&oPacket);
@@ -182,7 +187,7 @@ void Mob::SendChangeControllerPacket(User* pUser, int nLevel)
 void Mob::SendReleaseControllPacket(User* pUser, int dwMobID)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(MobSendPacketFlag::SP_MobChangeController);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_MobChangeController);
 	oPacket.Encode1(0);
 	oPacket.Encode4(dwMobID);
 	//EncodeInitData(&oPacket);
@@ -238,7 +243,7 @@ void Mob::OnMobHit(User * pUser, long long int nDamage, int nAttackType)
 	if (GetHp() > 0)
 	{
 		OutPacket oPacket;
-		oPacket.Encode2(MobSendPacketFlag::SP_MobHPIndicator);
+		oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_MobHPIndicator);
 		oPacket.Encode4(GetFieldObjectID());
 		oPacket.Encode1((char)((GetHp() / GetMobTemplate()->m_lnMaxHP) * 100));
 		pUser->SendPacket(&oPacket);

@@ -12,6 +12,7 @@
 #include "..\Common\Net\PacketFlags\ClientPacketFlags.hpp"
 #include "..\Common\Net\PacketFlags\GamePacketFlags.hpp"
 #include "..\Common\Net\PacketFlags\UserPacketFlags.h"
+#include "..\Common\Net\PacketFlags\EPacketFlags.h"
 #include "..\Common\Net\PacketFlags\WvsContextPacketFlags.hpp"
 
 #include "FieldMan.h"
@@ -372,6 +373,9 @@ void User::OnPacket(InPacket *iPacket)
 	case ClientPacketFlag::OnUserAttack_AreaDot:
 		OnAttack(nType, iPacket);
 		break;
+	case ClientPacketFlag::CP_UserActivateNickItem:
+		OnUserActivateNickItem(iPacket);
+		break;
 	case ClientPacketFlag::OnChangeCharacterRequest:
 		OnIssueReloginCookie(iPacket);
 		break;
@@ -438,7 +442,7 @@ void User::OnChat(InPacket *iPacket)
 	unsigned char balloon = iPacket->Decode1();
 
 	OutPacket oPacket;
-	oPacket.Encode2(UserPacketFlag::UserCommon_OnChat);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_UserChat);
 	oPacket.Encode4(GetUserID());
 	oPacket.Encode1(0);
 	oPacket.EncodeStr(strMsg);
@@ -452,7 +456,7 @@ void User::OnChat(InPacket *iPacket)
 void User::PostTransferField(int dwFieldID, Portal * pPortal, int bForce)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(0x1BF); //Set Stage
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_SetField); //Set Stage
 	oPacket.Encode4(0); //nChannel
 	oPacket.Encode1(0);
 	oPacket.Encode4(0);
@@ -490,7 +494,7 @@ void User::SetMovePosition(int x, int y, char bMoveAction, short nFSN)
 void User::OnAvatarModified()
 {
 	OutPacket oPacket;
-	oPacket.Encode2(UserPacketFlag::UserRemote_OnAvatarModified);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_UserAvatarModified);
 	oPacket.Encode4(nCharacterID);
 	int dwAvatarModFlag = 1;
 	oPacket.Encode1(dwAvatarModFlag); //m_dwAvatarModFlag
@@ -554,7 +558,7 @@ void User::ValidateStat()
 void User::SendCharacterStat(bool bOnExclRequest, long long int liFlag)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(UserPacketFlag::UserLocal_OnStatChanged);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_StatChanged);
 	oPacket.Encode1((char)bOnExclRequest);
 	oPacket.Encode8(liFlag);
 	if (liFlag & BasicStat::BasicStatFlag::BS_Skin)
@@ -614,7 +618,7 @@ void User::SendCharacterStat(bool bOnExclRequest, long long int liFlag)
 void User::SendTemporaryStatReset(TemporaryStat::TS_Flag& flag)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(UserPacketFlag::USerLocal_OnTemporaryStatReset);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_TemporaryStatReset);
 	flag.Encode(&oPacket);
 	m_pSecondaryStat->EncodeIndieTempStat(&oPacket, flag);
 	oPacket.Encode2(0);
@@ -627,7 +631,7 @@ void User::SendTemporaryStatReset(TemporaryStat::TS_Flag& flag)
 void User::SendTemporaryStatSet(TemporaryStat::TS_Flag& flag, int tDelay)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(UserPacketFlag::USerLocal_OnTemporaryStatSet);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_TemporaryStatSet);
 	m_pSecondaryStat->EncodeForLocal(&oPacket, flag);
 	SendPacket(&oPacket);
 }
@@ -695,12 +699,26 @@ void User::ResetTemporaryStat(int tCur, int nReasonID)
 	}
 }
 
+void User::OnUserActivateNickItem(InPacket * iPacket)
+{
+	int nItem = iPacket->Decode4();
+	if (nItem != 0) {
+		//pCharacterData->
+	}
+
+	OutPacket oPacket;
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_UserSetActiveNickItem);
+	oPacket.Encode4(pCharacterData->nCharacterID);
+	oPacket.Encode4(nItem);
+	SendPacket(&oPacket);
+}
+
 void User::MigrateOut()
 {
 	pCharacterData->Save();
 	LeaveField();
 	OutPacket oPacket;
-	oPacket.Encode2(WvsContextPacketFlag::SP_ReturnToTitle);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ReturnToTitle);
 	SendPacket(&oPacket);
 
 }
@@ -713,7 +731,7 @@ User * User::FindUser(int nUserID)
 void User::SendDropPickUpResultPacket(bool bPickedUp, bool bIsMoney, int nItemID, int nCount, bool bOnExcelRequest)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(ClientPacketFlag::OnMessage);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_Message);
 	oPacket.Encode1((char)Message::eDropPickUpMessage);
 	if (bPickedUp)
 	{
@@ -742,7 +760,7 @@ void User::SendDropPickUpResultPacket(bool bPickedUp, bool bIsMoney, int nItemID
 void User::SendDropPickUpFailPacket(bool bOnExcelRequest)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(ClientPacketFlag::OnMessage);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_Message);
 	oPacket.Encode1((char)Message::eDropPickUpMessage);
 	oPacket.Encode1((char)0xFE);
 	oPacket.Encode4(0);
@@ -839,7 +857,7 @@ void User::OnLostQuestItem(InPacket * iPacket, int nQuestID)
 void User::SendQuestRecordMessage(int nKey, int nState, const std::string & sStringRecord)
 {
 	OutPacket oPacket;
-	oPacket.Encode2((short)ClientPacketFlag::OnMessage);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_Message);
 	oPacket.Encode1((char)Message::eQuestRecordMessage);
 	oPacket.Encode4(nKey);
 	oPacket.Encode1(nState);

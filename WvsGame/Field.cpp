@@ -1,6 +1,7 @@
 #include "Field.h"
 #include "LifePool.h"
 #include "Net\PacketFlags\MobPacketFlags.hpp"
+#include "Net\PacketFlags\EPacketFlags.h"
 #include "Net\InPacket.h"
 #include "Net\OutPacket.h"
 #include "Mob.h"
@@ -338,7 +339,7 @@ void Field::OnMobMove(User * pCtrl, Mob * pMob, InPacket * iPacket)
 
 	//Encode Ctrl Ack Packet
 	OutPacket ctrlAckPacket;
-	ctrlAckPacket.Encode2(MobSendPacketFlag::SP_MobCtrlAck);
+	ctrlAckPacket.Encode2(EPacketFlags::LP_MobCtrlAck);
 	ctrlAckPacket.Encode4(pMob->GetFieldObjectID());
 	ctrlAckPacket.Encode2(nMobCtrlSN);
 	ctrlAckPacket.Encode1(bNextAttackPossible);
@@ -350,7 +351,7 @@ void Field::OnMobMove(User * pCtrl, Mob * pMob, InPacket * iPacket)
 
 	//Encode Move Packet
 	OutPacket movePacket;
-	movePacket.Encode2(MobSendPacketFlag::SP_MobMove); //CMob::OnMove
+	movePacket.Encode2(EPacketFlags::LP_MobMove); //CMob::OnMove
 	movePacket.Encode4(pMob->GetFieldObjectID());
 	movePacket.Encode1(bNextAttackPossible);
 	movePacket.Encode1(pCenterSplit);

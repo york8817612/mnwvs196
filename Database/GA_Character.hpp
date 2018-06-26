@@ -36,7 +36,7 @@ private:
 	void LoadQuestRecord();
 
 public:
-	char nMixBaseHairColor = 0xFF,
+	char nMixBaseHairColor = -1,
 		nMixAddHairColor = 0,
 		nMixHairBaseProb = 0,
 		nMixedHairColor = 0,

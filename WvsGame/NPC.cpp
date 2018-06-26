@@ -2,6 +2,7 @@
 #include "User.h"
 #include "..\Common\Net\InPacket.h"
 #include "..\Common\Net\OutPacket.h"
+#include "..\Common\Net\PacketFlags\EPacketFlags.h"
 
 Npc::Npc()
 {
@@ -15,8 +16,8 @@ void Npc::OnUpdateLimitedInfo(User * pUser, InPacket * iPacket)
 {
 	int nRemained = iPacket->RemainedCount();
 	OutPacket oPacket;
-	oPacket.Encode2(0x417);
-	printf("[LifePool::OnNpcPacket][OnUpdateLimitedInfo]Remained = %d\n", nRemained);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_NpcMove);
+	//printf("[LifePool::OnNpcPacket][OnUpdateLimitedInfo]Remained = %d\n", nRemained);
 	if (nRemained == 6)
 	{
 		oPacket.Encode4(GetFieldObjectID());
@@ -31,7 +32,7 @@ void Npc::OnUpdateLimitedInfo(User * pUser, InPacket * iPacket)
 void Npc::SendChangeControllerPacket(User * pUser)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(0x415);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_NpcChangeController);
 	oPacket.Encode1(1);
 	oPacket.Encode4(GetFieldObjectID());
 	oPacket.Encode4(GetTemplateID());
@@ -41,7 +42,7 @@ void Npc::SendChangeControllerPacket(User * pUser)
 
 void Npc::MakeEnterFieldPacket(OutPacket *oPacket)
 {
-	oPacket->Encode2(0x412); //CNpcPool::OnUserEnterField
+	oPacket->Encode2(EPacketFlags::SERVER_PACKET::LP_NpcEnterField); //CNpcPool::OnUserEnterField
 	oPacket->Encode4(GetFieldObjectID());
 	oPacket->Encode4(GetTemplateID());
 	EncodeInitData(oPacket);

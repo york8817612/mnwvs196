@@ -7,6 +7,7 @@
 #include "..\ScriptLib\lvm.h"
 #include "..\Common\Net\InPacket.h"
 #include "..\Common\Net\OutPacket.h"
+#include "..\Common\Net\PacketFlags\EPacketFlags.h"
 
 luaL_Reg Script::SelfMetatable[] = {
 	{ "askAvatar", SelfAskAvatar },
@@ -84,7 +85,7 @@ int Script::SelfSay(lua_State * L)
 	Script* self = luaW_check<Script>(L, 1);
 	const char* text = luaL_checkstring(L, 2);
 	OutPacket oPacket;
-	oPacket.Encode2(0x56E);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);
 	oPacket.Encode4(self->m_nID);
 	oPacket.Encode1(0);
@@ -107,7 +108,7 @@ int Script::SelfAskAvatar(lua_State * L)
 	const char* text = luaL_checkstring(L, 2);
 	self->m_nUserInput = luaL_checkinteger(L, 3);
 	OutPacket oPacket;
-	oPacket.Encode2(0x56E);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);
 	oPacket.Encode4(self->m_nID);
 	oPacket.Encode1(0);
@@ -134,7 +135,7 @@ int Script::SelfAskText(lua_State * L)
 	int nMinValue = (int)luaL_checkinteger(L, 4);
 	int nMaxValue = (int)luaL_checkinteger(L, 5);
 	OutPacket oPacket;
-	oPacket.Encode2(0x56E);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);
 	oPacket.Encode4(self->m_nID);
 	oPacket.Encode1(0);
@@ -159,7 +160,7 @@ int Script::SelfAskNumber(lua_State * L)
 	int nMinValue = (int)luaL_checkinteger(L, 4);
 	int nMaxValue = (int)luaL_checkinteger(L, 5);
 	OutPacket oPacket;
-	oPacket.Encode2(0x56E);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);
 	oPacket.Encode4(self->m_nID);
 	oPacket.Encode1(0);
@@ -181,7 +182,7 @@ int Script::SelfAskYesNo(lua_State * L)
 	Script* self = luaW_check<Script>(L, 1);
 	const char* text = luaL_checkstring(L, 2);
 	OutPacket oPacket;
-	oPacket.Encode2(0x56E);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);
 	oPacket.Encode4(self->m_nID);
 	oPacket.Encode1(0);
@@ -200,7 +201,7 @@ int Script::SelfAskMenu(lua_State * L)
 	Script* self = luaW_check<Script>(L, 1);
 	const char* text = luaL_checkstring(L, 2);
 	OutPacket oPacket;
-	oPacket.Encode2(0x56E);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);
 	oPacket.Encode4(self->m_nID);
 	oPacket.Encode1(0);
@@ -229,7 +230,7 @@ int Script::SelfSayNext(lua_State * L)
 	int nCurPage = (int)luaL_checkinteger(L, 3);
 	int nNextPage = (int)luaL_checkinteger(L, 4);
 	OutPacket oPacket;
-	oPacket.Encode2(0x56E);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);
 	oPacket.Encode4(self->m_nID);
 	oPacket.Encode1(0);

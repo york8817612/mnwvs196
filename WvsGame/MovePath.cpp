@@ -26,7 +26,7 @@ void MovePath::Decode(InPacket * iPacket)
 		elem.nAttr = iPacket->Decode1();
 		switch (elem.nAttr)
 		{
-			case 0:
+			case MovePathAttribute::MPA_NORMAL:
 			case 8:
 			case 15:
 			case 17:
