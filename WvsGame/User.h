@@ -98,7 +98,7 @@ public:
 
 	};
 
-	enum ERuneStoneType
+	/*enum ERuneStoneType
 	{
 		RST_NONE = 0xFFFFFFFF,
 		RST_UPGRADE_SPEED = 0x0,
@@ -111,9 +111,9 @@ public:
 		RST_INCREASE = 0x7,
 		RST_REDUCE_COOLTIME = 0x8,
 		RST_COUNT = 0x9,
-	};
+	};*/
 
-	enum ECharacterSkill
+	/*enum ECharacterSkill
 	{
 		CHARACTER_SKILL_NOT_DEFINE = 0x0,
 		CHARACTER_POTENTIAL_SKILL_46 = 0x42C1DAE,
@@ -3673,7 +3673,7 @@ public:
 		FIELD_ATTACK_OBJ_ATTACK_8 = 0x8,
 		FIELD_ATTACK_OBJ_ATTACK_9 = 0x9,
 		FIELD_ATTACK_OBJ_ATTACK_10 = 0xA,
-	};
+	};*/
 
 	enum FORCEATOM
 	{

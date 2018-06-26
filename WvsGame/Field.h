@@ -94,7 +94,13 @@ public:
 		FieldEffect_OffSpineScreen = 0x1A,
 	};
 
-	void BroadcastPacket(OutPacket* oPacket);
+	void EffectTremble(User *pUser, char bHeavyNShortTremble, unsigned int tDelay);
+	void EffectChangeBGM(User *pUser, const std::string& sBGM);
+	void EffectObject(User *pUser, const std::string& sName);
+	void EffectScreen(User *pUser, const std::string& sName, int adwCharacterID = 0);
+	void EffectSound(User *pUser, const std::string& sName, int adwCharacterID = 0);
+
+	void BroadcastPacket(OutPacket* oPacket, int adwCharacterID = 0);
 
 	void SetCould(bool cloud);
 	bool IsCloud() const;

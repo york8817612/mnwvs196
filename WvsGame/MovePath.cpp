@@ -26,30 +26,32 @@ void MovePath::Decode(InPacket * iPacket)
 		elem.nAttr = iPacket->Decode1();
 		switch (elem.nAttr)
 		{
-			case MovePathAttribute::MPA_NORMAL:
-			case 8:
-			case 15:
-			case 17:
-			case 19:
-			case 67:
-			case 68:
-			case 69: {
+			case MPA_NORMAL:
+			case MPA_HANGONBACK:
+			case MPA_FALLDOWN:
+			case MPA_DRAGDOWN:
+			case MPA_WINGS:
+			case MPA_MOB_ATTACK_RUSH:
+			case MPA_MOB_ATTACK_RUSH_STOP:
+			case MPA_MOB_ATTACK_LEAP: 
+			{
 				elem.x = iPacket->Decode2();
 				elem.y = iPacket->Decode2();
 				elem.vx = iPacket->Decode2();
 				elem.vy = iPacket->Decode2();
 				elem.fh = iPacket->Decode2();
 				
-				if (elem.nAttr == 15 || elem.nAttr == 17)
+				if (elem.nAttr == MPA_FALLDOWN || elem.nAttr == MPA_DRAGDOWN)
 					elem.fhFootStart = iPacket->Decode2();
 
 				elem.offsetX = iPacket->Decode2();
 				elem.offsetY = iPacket->Decode2();
 				break;
 			}
-			case 56:
-			case 66:
-			case 86: {
+			case MPA_IMPACT_IGNORE_MOVEPATH:
+			case MPA_MOB_TELEPORT:
+			case MPA_UNK4:
+			{
 				elem.x = iPacket->Decode2();
 				elem.y = iPacket->Decode2();
 				elem.vx = iPacket->Decode2();
@@ -57,111 +59,112 @@ void MovePath::Decode(InPacket * iPacket)
 				elem.fh = iPacket->Decode2();
 				break;
 			}
-			case 1:
-			case 2:
-			case 18:
-			case 21:
-			case 22:
-			case 24:
-			case 62:
-			case 63:
-			case 64:
-			case 65: {
+			case MPA_JUMP:
+			case MPA_IMPACT:
+			case MPA_STARTWINGS:
+			case MPA_MOB_TOSS:
+			case MPA_MOB_TOSS_SLOWDOWN:
+			case MPA_DASH_SLIDE:
+			case MPA_MOB_LADDER:
+			case MPA_MOB_RIGHTANGLE:
+			case MPA_MOB_STOPNODE_START:
+			case MPA_MOB_BEFORE_NODE:
+			{
 				elem.vx = iPacket->Decode2();
 				elem.vy = iPacket->Decode2();
-				if (elem.nAttr == 21 || elem.nAttr == 22)
+				if (elem.nAttr == MPA_MOB_TOSS || elem.nAttr == MPA_MOB_TOSS_SLOWDOWN)
 					elem.fhFootStart = iPacket->Decode2();
 				break;
 			}
-			case 29:
-			case 30:
-			case 31:
-			case 32:
-			case 33:
-			case 34:
-			case 35:
-			case 36:
-			case 37:
-			case 38:
-			case 39:
-			case 40:
-			case 41:
-			case 42:
-			case 43:
-			case 44:
-			case 45:
-			case 46:
-			case 47:
-			case 48:
-			case 49:
-			case 50:
-			case 51:
-			case 55:
-			case 57:
-				//case 58: 
-			case 59:
-			case 60:
-			case 61:
-			case 70:
-			case 71:
-			case 72:
-			case 74:
-			case 79:
-			case 81:
-			case 83:
-			case 84: {
+			case MPA_FLASHJUMP:
+			case MPA_DOUBLE_JUMP:
+			case MPA_DOUBLE_JUMP_DOWN:
+			case MPA_TRIPLE_JUMP:
+			case MPA_FLASHJUMP_CHANGEEFF:
+			case MPA_ROCKET_BOOSTER:
+			case MPA_BACKSTEP_SHOT:
+			case MPA_CANNON_JUMP:
+			case MPA_QUICK_SILVER_JUMP:
+			case MPA_MOBPOWERKNOCKBACK:
+			case MPA_VERTICALJUMP:
+			case MPA_CUSTOMIMPACT:
+			case MPA_CUSTOMIMPACT2:
+			case MPA_COMBATSTEP:
+			case MPA_HIT:
+			case MPA_TIMEBOMBATTACK:
+			case MPA_SNOWBALLTOUCH:
+			case MPA_BUFFZONEEFFECT:
+			case MPA_LEAF_TORNADO:
+			case MPA_STYLISH_ROPE:
+			case MPA_ROPE_CONNECT:
+			case MPA_STRIKER_UPPERCUT:
+			case MPA_CRAWL:
+			case MPA_DB_BLADE_ASCENSION:
+			case MPA_ANGLE_IMPACT:
+			case MPA_STARPLANET_RIDING_BOOSTER:
+			case MPA_USER_TOSS:
+			case MPA_SLASH_JUMP:
+			case MPA_BATTLEPVP_MUGONG_SOMER_SAULT:
+			case MPA_BATTLEPVP_HELENA_STEPSHOT:
+			case MPA_SUN_OF_GLORY:
+			case MPA_HOOKSHOT:
+			case MPA_FINAL_TOSS:
+			case MPA_NIGHTLORD_SHADOWWEB:
+			case MPA_RW_EXPLOSION_CANNON:
+			case MPA_UNK2: {
 				elem.x = m_x;
 				elem.y = m_y;
 				break;
 			}
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 9:
-			case 10:
-			case 11:
-			case 13:
-			case 26:
-			case 27:
-			case 52:
-			case 53:
-			case 54:
-			case 58:
-				//case 61:
-			case 76:
-			case 77:
-			case 78:
-			case 80:
-			case 82: {
+			case MPA_IMMEDIATE:
+			case MPA_TELEPORT:
+			case MPA_RANDOM_TELEPORT:
+			case MPA_DEMON_TRACE_TELEPORT:
+			case MPA_RETURN_TELEPORT:
+			case MPA_ASSAULTER:
+			case MPA_ASSASSINATION:
+			case MPA_RUSH:
+			case MPA_SITDOWN:
+			case MPA_BLINK_LIGHT:
+			case MPA_TELEPORT_ZERO1:
+			case MPA_TELEPORT_BY_MOBSKILLAREA:
+			case MPA_ZERO_TAG:
+			case MPA_RETREAT_SHOT:
+			case MPA_UNK1:
+			case MPA_PINKBEAN_POGO_STICK:
+			case MPA_PINKBEAN_POGO_STICK_END:
+			case MPA_PINKBEAN_ROLLING_AIR:
+			case MPA_TELEPORT_KINESIS1:
+			case MPA_TELEPORT_ARAN1:
+			{
 				elem.x = iPacket->Decode2();
 				elem.y = iPacket->Decode2();
 				elem.fh = iPacket->Decode2();
 				break;
 			}
-			case 14:
-			case 16: {
+			case MPA_STARTFALLDOWN:
+			case MPA_STARTDRAGDOWN:
+			{
 				elem.vx = iPacket->Decode2();
 				elem.vy = iPacket->Decode2();
 				elem.fhFootStart = iPacket->Decode2();
 				break;
 			}
-			case 23: {
+			case MPA_FLYING_BLOCK: {
 				elem.x = iPacket->Decode2();
 				elem.y = iPacket->Decode2();
 				elem.vx = iPacket->Decode2();
 				elem.vy = iPacket->Decode2();
 				break;
 			}
-			case 12: {
+			case MPA_STATCHANGE: {
 				elem.x = m_x;
 				elem.y = m_y;
 				elem.bStat = iPacket->Decode1();
 				break;
 			}
 		}
-		if (elem.nAttr != 12)
+		if (elem.nAttr != MPA_STATCHANGE)
 		{
 			elem.bMoveAction = iPacket->Decode1();
 			elem.tElapse = iPacket->Decode2();
@@ -184,21 +187,22 @@ void MovePath::Encode(OutPacket * oPacket)
 		oPacket->Encode1(elem.nAttr);
 		switch (elem.nAttr)
 		{
-			case 0:
-			case 8:
-			case 15:
-			case 17:
-			case 19:
-			case 67:
-			case 68:
-			case 69: {
+			case MPA_NORMAL:
+			case MPA_HANGONBACK:
+			case MPA_FALLDOWN:
+			case MPA_DRAGDOWN:
+			case MPA_WINGS:
+			case MPA_MOB_ATTACK_RUSH:
+			case MPA_MOB_ATTACK_RUSH_STOP:
+			case MPA_MOB_ATTACK_LEAP:
+			{
 				oPacket->Encode2(elem.x);
 				oPacket->Encode2(elem.y);
 				oPacket->Encode2(elem.vx);
 				oPacket->Encode2(elem.vy);
 				oPacket->Encode2(elem.fh);
 
-				if (elem.nAttr == 15 || elem.nAttr == 17)
+				if (elem.nAttr == MPA_FALLDOWN || elem.nAttr == MPA_DRAGDOWN)
 					oPacket->Encode2(elem.fhFootStart);
 
 				oPacket->Encode2(elem.offsetX);
@@ -206,9 +210,9 @@ void MovePath::Encode(OutPacket * oPacket)
 				m_fhLast = elem.fh;
 				break;
 			}
-			case 56:
-			case 66:
-			case 86: {
+			case MPA_IMPACT_IGNORE_MOVEPATH:
+			case MPA_MOB_TELEPORT:
+			case MPA_UNK4: {
 				oPacket->Encode2(elem.x);
 				oPacket->Encode2(elem.y);
 				oPacket->Encode2(elem.vx);
@@ -217,108 +221,109 @@ void MovePath::Encode(OutPacket * oPacket)
 				m_fhLast = elem.fh;
 				break;
 			}
-			case 1:
-			case 2:
-			case 18:
-			case 21:
-			case 22:
-			case 24:
-			case 62:
-			case 63:
-			case 64:
-			case 65: {
+			case MPA_JUMP:
+			case MPA_IMPACT:
+			case MPA_STARTWINGS:
+			case MPA_MOB_TOSS:
+			case MPA_MOB_TOSS_SLOWDOWN:
+			case MPA_DASH_SLIDE:
+			case MPA_MOB_LADDER:
+			case MPA_MOB_RIGHTANGLE:
+			case MPA_MOB_STOPNODE_START:
+			case MPA_MOB_BEFORE_NODE:
+			{
 				oPacket->Encode2(elem.vx);
 				oPacket->Encode2(elem.vy);
-				if (elem.nAttr == 21 || elem.nAttr == 22)
+				if (elem.nAttr == MPA_MOB_TOSS || elem.nAttr == MPA_MOB_TOSS_SLOWDOWN)
 					oPacket->Encode2(elem.fhFootStart);
 				break;
 			}
-			case 29:
-			case 30:
-			case 31:
-			case 32:
-			case 33:
-			case 34:
-			case 35:
-			case 36:
-			case 37:
-			case 38:
-			case 39:
-			case 40:
-			case 41:
-			case 42:
-			case 43:
-			case 44:
-			case 45:
-			case 46:
-			case 47:
-			case 48:
-			case 49:
-			case 50:
-			case 51:
-			case 55:
-			case 57:
-				//case 58: 
-			case 59:
-			case 60:
-			case 61:
-			case 70:
-			case 71:
-			case 72:
-			case 74:
-			case 79:
-			case 81:
-			case 83:
-			case 84: {
+			case MPA_FLASHJUMP:
+			case MPA_DOUBLE_JUMP:
+			case MPA_DOUBLE_JUMP_DOWN:
+			case MPA_TRIPLE_JUMP:
+			case MPA_FLASHJUMP_CHANGEEFF:
+			case MPA_ROCKET_BOOSTER:
+			case MPA_BACKSTEP_SHOT:
+			case MPA_CANNON_JUMP:
+			case MPA_QUICK_SILVER_JUMP:
+			case MPA_MOBPOWERKNOCKBACK:
+			case MPA_VERTICALJUMP:
+			case MPA_CUSTOMIMPACT:
+			case MPA_CUSTOMIMPACT2:
+			case MPA_COMBATSTEP:
+			case MPA_HIT:
+			case MPA_TIMEBOMBATTACK:
+			case MPA_SNOWBALLTOUCH:
+			case MPA_BUFFZONEEFFECT:
+			case MPA_LEAF_TORNADO:
+			case MPA_STYLISH_ROPE:
+			case MPA_ROPE_CONNECT:
+			case MPA_STRIKER_UPPERCUT:
+			case MPA_CRAWL:
+			case MPA_DB_BLADE_ASCENSION:
+			case MPA_ANGLE_IMPACT:
+			case MPA_STARPLANET_RIDING_BOOSTER:
+			case MPA_USER_TOSS:
+			case MPA_SLASH_JUMP:
+			case MPA_BATTLEPVP_MUGONG_SOMER_SAULT:
+			case MPA_BATTLEPVP_HELENA_STEPSHOT:
+			case MPA_SUN_OF_GLORY:
+			case MPA_HOOKSHOT:
+			case MPA_FINAL_TOSS:
+			case MPA_NIGHTLORD_SHADOWWEB:
+			case MPA_RW_EXPLOSION_CANNON:
+			case MPA_UNK2: {
 				break;
 			}
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 9:
-			case 10:
-			case 11:
-			case 13:
-			case 26:
-			case 27:
-			case 52:
-			case 53:
-			case 54:
-			case 58:
-				//case 61:
-			case 76:
-			case 77:
-			case 78:
-			case 80:
-			case 82: {
+			case MPA_IMMEDIATE:
+			case MPA_TELEPORT:
+			case MPA_RANDOM_TELEPORT:
+			case MPA_DEMON_TRACE_TELEPORT:
+			case MPA_RETURN_TELEPORT:
+			case MPA_ASSAULTER:
+			case MPA_ASSASSINATION:
+			case MPA_RUSH:
+			case MPA_SITDOWN:
+			case MPA_BLINK_LIGHT:
+			case MPA_TELEPORT_ZERO1:
+			case MPA_TELEPORT_BY_MOBSKILLAREA:
+			case MPA_ZERO_TAG:
+			case MPA_RETREAT_SHOT:
+			case MPA_UNK1:
+			case MPA_PINKBEAN_POGO_STICK:
+			case MPA_PINKBEAN_POGO_STICK_END:
+			case MPA_PINKBEAN_ROLLING_AIR:
+			case MPA_TELEPORT_KINESIS1:
+			case MPA_TELEPORT_ARAN1:
+			{
 				oPacket->Encode2(elem.x);
 				oPacket->Encode2(elem.y);
 				oPacket->Encode2(elem.fh);
 				m_fhLast = elem.fh;
 				break;
 			}
-			case 14:
-			case 16: {				
+			case MPA_STARTFALLDOWN:
+			case MPA_STARTDRAGDOWN: 
+			{
 				oPacket->Encode2(elem.vx);
 				oPacket->Encode2(elem.vy);
 				oPacket->Encode2(elem.fhFootStart);
 				break;
 			}
-			case 23: {
+			case MPA_FLYING_BLOCK: {
 				oPacket->Encode2(elem.x);
 				oPacket->Encode2(elem.y);
 				oPacket->Encode2(elem.vx);
 				oPacket->Encode2(elem.vy);
 				break;
 			}
-			case 12: {
+			case MPA_STATCHANGE: {
 				oPacket->Encode1(elem.bStat);
 				break;
 			}
 		}
-		if (elem.nAttr != 12)
+		if (elem.nAttr != MPA_STATCHANGE)
 		{
 			oPacket->Encode1(elem.bMoveAction);
 			oPacket->Encode2(elem.tElapse);

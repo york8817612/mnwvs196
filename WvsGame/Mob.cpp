@@ -61,12 +61,13 @@ void Mob::EncodeInitData(OutPacket *oPacket, bool bIsControl)
 		oPacket->Encode4(m_pMobTemplate->m_nLevel);
 		oPacket->Encode4(0); // Unknown
 	}
+	//MobStat::EncodeTemporary
 	oPacket->EncodeBuffer(nullptr, 12);
 
-	auto msFlag = MobStat::TS_Flag::GetDefault();
+	/*auto msFlag = MobStat::TS_Flag::GetDefault();
 
-	mStat->EncodeTemporary(oPacket, msFlag);
-	//MobStat::EncodeTemporary
+	mStat->EncodeTemporary(oPacket, msFlag, timeGetTime());*/
+	
 
 	oPacket->Encode2(GetPosX());
 	oPacket->Encode2(GetPosY());

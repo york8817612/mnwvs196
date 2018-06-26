@@ -118,6 +118,6 @@ public:
 	};
 
 	bool CHECK_MS_NORML(MobStat::TS_Flag & flag, MobStat::MobStatNumbers eMSN);
-	void EncodeTemporary(OutPacket *oPacket, MobStat::TS_Flag & flag);
+	void EncodeTemporary(OutPacket *oPacket, MobStat::TS_Flag & dwFlag, int tCur);
 
 };

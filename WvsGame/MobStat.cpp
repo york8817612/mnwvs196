@@ -74,12 +74,13 @@ MobStat::TS_Flag MobStat::TS_Flag::GetDefault()
 	return ret;
 }
 
-void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & flags) {
-	flags.Encode(oPacket);
+void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & dwFlag, int tCur) {
+	dwFlag.Encode(oPacket);
 	
+	//原本是一個一個if
 	for (int i = 0; i < MobStatNumbers::MOB_STAT_Burned; i++)
 	{
-		if (flags & TS_Flag::TS_Flag(i))
+		if (dwFlag & TS_Flag::TS_Flag(i))
 		{
 			oPacket->Encode4(0);
 			oPacket->Encode4(0);
@@ -100,19 +101,19 @@ void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & flags) {
 	//		oPacket->Encode2((short)((buff.getCancelTask() - System.currentTimeMillis()) / 1000)); //t
 	//	}
 	//}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_PDR)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_PDR)) {
 		oPacket->Encode4(0); // c
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_MDR)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_MDR)) {
 		oPacket->Encode4(0); // c
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_PCounter)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_PCounter)) {
 		oPacket->Encode4(0); // w
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_MCounter)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_MCounter)) {
 		oPacket->Encode4(0); // w
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_PCounter) || CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_MCounter)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_PCounter) || CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_MCounter)) {
 		int n = 0, c = 0, b = 0;
 		/*for (MonsterStatusEffect buff : buffs) {
 			if (buff.getStati().equals(MonsterStatus.M_PCounter) || buff.getStati().equals(MonsterStatus.M_MCounter)) {
@@ -123,17 +124,17 @@ void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & flags) {
 		oPacket->Encode1(b); // b boolean
 		oPacket->Encode4(n); // n
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Fatality)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Fatality)) {
 		oPacket->Encode4(0); // w
 		oPacket->Encode4(0); // u
 		oPacket->Encode4(0); // p
 		oPacket->Encode4(0); // y
 						   // m
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Explosion)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Explosion)) {
 		oPacket->Encode4(0); // w
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_AddBuffStat)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_AddBuffStat)) {
 		int result = 0;
 		oPacket->Encode1(result);
 		if (result != 0) {
@@ -143,34 +144,34 @@ void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & flags) {
 			oPacket->Encode4(0); // nMDR
 		}
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_DeadlyCharge)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_DeadlyCharge)) {
 		oPacket->Encode4(0); // p
 		oPacket->Encode4(0); // w
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Incizing)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Incizing)) {
 		oPacket->Encode4(0); // w
 		oPacket->Encode4(0); // u
 		oPacket->Encode4(0); // p
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Speed)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Speed)) {
 		oPacket->Encode1(0); // m
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_BMageDebuff)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_BMageDebuff)) {
 		oPacket->Encode4(0); // c
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_DarkLightning)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_DarkLightning)) {
 		oPacket->Encode4(0); // c
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_BattlePvP_Helena_Mark)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_BattlePvP_Helena_Mark)) {
 		oPacket->Encode4(0); // c
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_MultiPMDR)) { // (186++)
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_MultiPMDR)) { // (186++)
 		oPacket->Encode4(0); // c
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Freeze)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Freeze)) {
 		oPacket->Encode4(0);
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Burned)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Burned)) {
 		//List<MonsterStatusEffect> bleedBuffs = new ArrayList();
 		//MonsterStatusEffect
 		/*buffs.stream().filter((buff) -> (buff.getStati().getBitNumber() == MonsterStatus.M_Burned.getBitNumber() && buff.getMobSkill() != null)).forEach((buff) -> {
@@ -195,47 +196,47 @@ void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & flags) {
 		//	});
 		//}
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Invincible)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Invincible)) {
 		oPacket->Encode1(0); // n // nInvincible
 		oPacket->Encode1(0); // b // bBalogDisable 
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_ExchangeAttack)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_ExchangeAttack)) {
 		oPacket->Encode1(0); // b
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_AddDamParty)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_AddDamParty)) {
 		oPacket->Encode4(0); // w
 		oPacket->Encode4(0); // p
 		oPacket->Encode4(0); // c
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_LinkTeam)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_LinkTeam)) {
 		oPacket->EncodeStr(""); // sLinkTeam
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_SoulExplosion)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_SoulExplosion)) {
 		oPacket->Encode4(0); // n
 		oPacket->Encode4(0); // r
 		oPacket->Encode4(0); // w
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_SeperateSoulP)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_SeperateSoulP)) {
 		oPacket->Encode4(0); // n
 		oPacket->Encode4(0); // r
 		oPacket->Encode2(0); // t
 		oPacket->Encode4(0); // w
 		oPacket->Encode4(0); // u
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_SeperateSoulC)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_SeperateSoulC)) {
 		oPacket->Encode4(0); // n
 		oPacket->Encode4(0); // r
 		oPacket->Encode2(0); // t
 		oPacket->Encode4(0); // w
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Ember)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Ember)) {
 		oPacket->Encode4(0); // n
 		oPacket->Encode4(0); // r
 		oPacket->Encode4(0); // t
 		oPacket->Encode4(0); // w
 		oPacket->Encode4(0); // u
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_TrueSight)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_TrueSight)) {
 		oPacket->Encode4(0); // n
 		oPacket->Encode4(0); // r
 		oPacket->Encode4(0); // t
@@ -244,23 +245,23 @@ void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & flags) {
 		oPacket->Encode4(0); // u
 		oPacket->Encode4(0); // w
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_MultiDamSkill)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_MultiDamSkill)) {
 		oPacket->Encode4(0);
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_Laser)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Laser)) {
 		oPacket->Encode4(0); // n
 		oPacket->Encode4(0); // r
 		oPacket->Encode4(0); // t
 		oPacket->Encode4(0); // w
 		oPacket->Encode4(0); // u
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_ElementResetBySummon)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_ElementResetBySummon)) {
 		oPacket->Encode4(0); // c
 		oPacket->Encode4(0); // p
 		oPacket->Encode4(0); // u
 		oPacket->Encode4(0); // w
 	}
-	if (CHECK_MS_NORML(flags, MobStatNumbers::MOB_STAT_BahamutLightElemAddDam)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_BahamutLightElemAddDam)) {
 		oPacket->Encode4(0); // p
 		oPacket->Encode4(0); // c
 	}

@@ -36,11 +36,14 @@ Field::~Field()
 	delete m_asyncUpdateTimer;
 }
 
-void Field::BroadcastPacket(OutPacket * oPacket)
+void Field::BroadcastPacket(OutPacket * oPacket, int adwCharacterID)
 {
 	std::lock_guard<std::mutex> userGuard(fieldUserMutex);
 	for (auto& user : m_mUser)
-		user.second->SendPacket(oPacket);
+	{
+		if (user.second->GetUserID() != adwCharacterID)
+			user.second->SendPacket(oPacket);
+	}
 }
 
 void Field::SetCould(bool cloud)
@@ -384,6 +387,55 @@ void Field::OnMobMove(User * pCtrl, Mob * pMob, InPacket * iPacket)
 
 	SplitSendPacket(&movePacket, nullptr);
 	pCtrl->SendPacket(&ctrlAckPacket);
+}
+
+void Field::EffectTremble(User *pUser, char bHeavyNShortTremble, unsigned int tDelay) {
+	OutPacket oPacket;
+
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_FieldEffect);
+	oPacket.Encode1(FieldEffect_Tremble);
+	oPacket.Encode1(bHeavyNShortTremble);
+	oPacket.Encode4(tDelay);
+	oPacket.Encode2(0);
+	pUser->GetField()->BroadcastPacket(&oPacket, 0);
+}
+
+void Field::EffectChangeBGM(User *pUser, const std::string& sBGM) {
+	OutPacket oPacket;
+
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_FieldEffect);
+	oPacket.Encode1(FieldEffect_ChangeBGM);
+	oPacket.EncodeStr(sBGM);
+	oPacket.Encode4(0);
+	pUser->GetField()->BroadcastPacket(&oPacket, 0);
+}
+
+void Field::EffectObject(User *pUser, const std::string& sName) {
+	OutPacket oPacket;
+
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_FieldEffect);
+	oPacket.Encode1(FieldEffect_Object);
+	oPacket.EncodeStr(sName);
+	pUser->GetField()->BroadcastPacket(&oPacket, 0);
+}
+
+void Field::EffectScreen(User *pUser, const std::string& sName, int adwCharacterID) {
+	OutPacket oPacket;
+
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_FieldEffect);
+	oPacket.Encode1(FieldEffect_Screen);
+	oPacket.EncodeStr(sName);
+	pUser->GetField()->BroadcastPacket(&oPacket, adwCharacterID);
+}
+
+void Field::EffectSound(User *pUser, const std::string& sName, int adwCharacterID) {
+	OutPacket oPacket;
+
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_FieldEffect);
+	oPacket.Encode1(FieldEffect_Sound);
+	oPacket.EncodeStr(sName);
+	oPacket.Encode4(0);
+	pUser->GetField()->BroadcastPacket(&oPacket, adwCharacterID);
 }
 
 void Field::Update()
