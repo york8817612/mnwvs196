@@ -21,6 +21,6 @@ public:
 	void Load(GA_Character *vCharacter);
 	void Save(GA_Character *vCharacter, bool newCharacter = false);
 
-	void Encode(OutPacket *oPacket);
+	void Encode(GA_Character *vCharacter, OutPacket *oPacket);
 	void Decode(InPacket* iPacket);
 };

@@ -158,6 +158,16 @@ namespace WvsGameConstants
 		return result;
 	}
 
+	static bool IsDAvengerJob(int nJob)
+	{
+		return nJob == 3101 || nJob == 3120 || nJob == 3121 || nJob == 3122;
+	}
+
+	static bool IsDSlayerJob(int nJob)
+	{
+		return nJob == 3100 || nJob == 3110 || nJob == 3111 || nJob == 3112 || nJob == 3001;
+	}
+
 	static bool IsEvanJob(int nJob)
 	{
 		int result; // eax@2

@@ -2,6 +2,7 @@
 #include "..\Database\GA_Character.hpp"
 #include "..\Database\GW_ItemSlotBundle.h"
 #include "..\Database\GW_ItemSlotBase.h"
+#include "..\Common\Net\PacketFlags\EPacketFlags.h"
 #include "ItemInfo.h"
 #include "SkillInfo.h"
 
@@ -154,7 +155,7 @@ void InventoryManipulator::InsertChangeLog(std::vector<ChangeLog>& aChangeLog, i
 
 void InventoryManipulator::MakeInventoryOperation(OutPacket * oPacket, int bOnExclResult, std::vector<InventoryManipulator::ChangeLog>& aChangeLog)
 {
-	oPacket->Encode2(0x45);
+	oPacket->Encode2(EPacketFlags::SERVER_PACKET::LP_InventoryOperation);
 	oPacket->Encode1(bOnExclResult);
 	oPacket->Encode1((char)aChangeLog.size());
 	oPacket->Encode1(0);

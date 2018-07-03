@@ -4,6 +4,7 @@
 #include "..\Common\Net\PacketFlags\ClientPacketFlags.hpp"
 #include "..\Common\Net\PacketFlags\MobPacketFlags.hpp"
 #include "..\Common\Net\PacketFlags\UserPacketFlags.h"
+#include "..\Common\\Net\PacketFlags\EPacketFlags.h"
 
 #include "User.h"
 #include "MobTemplate.h"
@@ -518,7 +519,7 @@ void LifePool::OnMobPacket(User * pUser, int nType, InPacket * iPacket)
 void LifePool::OnNpcPacket(User * pUser, int nType, InPacket * iPacket)
 {
 	std::lock_guard<std::mutex> lock(m_lifePoolMutex);
-	if (nType == 0x384)
+	if (nType == EPacketFlags::CLIENT_PACKET::CP_NpcMove)
 	{
 		auto iterNpc = this->m_aNpcGen.find(iPacket->Decode4());
 		if (iterNpc != m_aNpcGen.end())

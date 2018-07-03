@@ -3,6 +3,7 @@
 #include "..\Common\Net\InPacket.h"
 #include "..\Common\Net\OutPacket.h"
 #include "..\Common\Net\PacketFlags\EPacketFlags.h"
+#include "MovePath.h"
 
 Npc::Npc()
 {
@@ -18,14 +19,16 @@ void Npc::OnUpdateLimitedInfo(User * pUser, InPacket * iPacket)
 	OutPacket oPacket;
 	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_NpcMove);
 	//printf("[LifePool::OnNpcPacket][OnUpdateLimitedInfo]Remained = %d\n", nRemained);
-	if (nRemained == 6)
-	{
-		oPacket.Encode4(GetFieldObjectID());
-		oPacket.Encode2(iPacket->Decode2());
-		oPacket.Encode4(iPacket->Decode4());
+	
+	oPacket.Encode4(GetFieldObjectID());
+	oPacket.Encode2(iPacket->Decode2());
+	oPacket.Encode4(iPacket->Decode4());
+	if (nRemained > 6) {
+		MovePath movePath;
+		movePath.Decode(iPacket);
+		movePath.Encode(&oPacket);
 	}
-	else
-		return;
+
 	pUser->SendPacket(&oPacket);
 }
 

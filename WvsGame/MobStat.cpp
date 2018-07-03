@@ -82,9 +82,12 @@ void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & dwFlag, int tCur) {
 	{
 		if (dwFlag & TS_Flag::TS_Flag(i))
 		{
-			oPacket->Encode4(0);
-			oPacket->Encode4(0);
-			oPacket->Encode2(0);
+			int nValue = 0, 
+				rValue = 0, 
+				tValue = 0;
+			oPacket->Encode4(nValue); // n
+			oPacket->Encode4(rValue); // r
+			oPacket->Encode2(tValue - tCur / 500); // t
 		}
 	}
 	//for (MonsterStatusEffect buff : buffs) {
@@ -196,7 +199,7 @@ void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & dwFlag, int tCur) {
 		//	});
 		//}
 	}
-	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_Invincible)) {
+	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_BalogDisable)) {
 		oPacket->Encode1(0); // n // nInvincible
 		oPacket->Encode1(0); // b // bBalogDisable 
 	}

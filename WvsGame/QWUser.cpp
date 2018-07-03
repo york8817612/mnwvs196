@@ -7,6 +7,7 @@
 #include "..\Database\GW_CharacterMoney.h"
 #include "..\Database\GW_CharacterStat.h"
 #include "..\Database\GW_Avatar.hpp"
+#include "InventoryManipulator.h"
 
 bool QWUser::TryProcessLevelUp(User * pUser, int nInc, int & refReachMaxLvl)
 {
@@ -160,7 +161,7 @@ long long int QWUser::IncSP(User * pUser, int nJobLevel, int nInc, bool bOnlyFul
 	return BasicStat::BS_SP;
 }
 
-long long int QWUser::IncMoney(User * pUser, int nInc, bool bOnlyFull)
+long long int QWUser::IncMoney(User * pUser, int nInc, bool bOnlyFull, int bTotalMoneyChange)
 {
 	std::lock_guard<std::mutex> lock(pUser->GetLock());
 	pUser->GetCharacterData()->mMoney->nMoney += nInc;

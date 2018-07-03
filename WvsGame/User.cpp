@@ -21,6 +21,7 @@
 #include "WvsGame.h"
 #include "Field.h"
 #include "QWUInventory.h"
+#include "QWUser.h"
 #include "BasicStat.h"
 #include "SecondaryStat.h"
 #include "USkill.h"
@@ -54,7 +55,7 @@ void User::TryParsingDamageData(AttackInfo * pInfo, InPacket * iPacket)
 		iPacket->Decode2();
 		iPacket->Decode2();
 
-		if (pInfo->m_nType == ClientPacketFlag::OnUserAttack_MagicAttack) 
+		if (pInfo->m_nType == EPacketFlags::CLIENT_PACKET::CP_UserMagicAttack)
 		{
 			iPacket->Decode1();
 			if (pInfo->m_nSkillID == 80001835)
@@ -89,7 +90,7 @@ AttackInfo * User::TryParsingMeleeAttack(int nType, InPacket * iPacket)
 	int nSkillID = ret->m_nSkillID = iPacket->Decode4();
 	ret->m_nSLV = iPacket->Decode1();
 
-	if (nType != ClientPacketFlag::OnUserAttack_AreaDot)
+	if (nType != EPacketFlags::CLIENT_PACKET::CP_UserAreaDotAttack)
 		iPacket->Decode1();
 
 	ret->m_dwCRC = iPacket->Decode4();
@@ -107,7 +108,7 @@ AttackInfo * User::TryParsingMeleeAttack(int nType, InPacket * iPacket)
 	if (WvsGameConstants::IsZeroSkill(nSkillID))
 		iPacket->Decode1();
 
-	if (nType != ClientPacketFlag::OnUserAttack_BodyAttack)
+	if (nType != EPacketFlags::CLIENT_PACKET::CP_UserBodyAttack)
 		iPacket->Decode1();
 
 	iPacket->Decode1();
@@ -117,7 +118,7 @@ AttackInfo * User::TryParsingMeleeAttack(int nType, InPacket * iPacket)
 	ret->m_nAttackActionType = iPacket->Decode1();
 	ret->m_nAttackSpeed = iPacket->Decode1();
 
-	if (nType != ClientPacketFlag::OnUserAttack_BodyAttack)
+	if (nType != EPacketFlags::CLIENT_PACKET::CP_UserBodyAttack)
 		ret->m_tLastAttackTime = iPacket->Decode4();
 
 	iPacket->Decode4();
@@ -318,7 +319,257 @@ Field * User::GetField()
 
 void User::MakeEnterFieldPacket(OutPacket *oPacket)
 {
+	oPacket->Encode2(EPacketFlags::SERVER_PACKET::LP_UserEnterField);
+	oPacket->Encode4(GetUserID());
+	oPacket->Encode1(pCharacterData->mLevel->nLevel);
+	oPacket->EncodeStr(pCharacterData->strName);
 
+	//MapleQuestStatus ultExplorer = chr.getQuestNoAdd(MapleQuest.getInstance(111111));
+	/*if ((ultExplorer != null) && (ultExplorer.getCustomData() != null)) {
+		oPacket->EncodeStr(ultExplorer.getCustomData());
+	}
+	else {*/
+		oPacket->EncodeStr("");
+	//}
+
+	//if (chr.getGuildId() > 0) {
+	//	MapleGuild gs = World.Guild.getGuild(chr.getGuildId());
+	//	if (gs != null) {
+	//		oPacket->EncodeStr(gs.getName());
+	//		oPacket->Encode2(gs.getLogoBG()); // m_nGuildMarkBg
+	//		oPacket->Encode1(gs.getLogoBGColor()); // m_nGuildMarkBgColor
+	//		oPacket->Encode2(gs.getLogo()); // m_nGuildMark
+	//		oPacket->Encode1(gs.getLogoColor()); // m_nGender
+	//		oPacket->Encode1(0); // m_nAccountGender
+	//		oPacket->Encode4(0); // m_nPopularity
+	//	}
+	//	else {
+	//		mplew.writeZeroBytes(13);
+	//	}
+	//}
+	//else {
+		oPacket->EncodeBuffer(nullptr, 13);
+	//}
+
+	oPacket->Encode4(0); // m_nNameTagMark
+
+	//PacketHelper.addSpawnPlayerBuffStat(mplew, chr);
+	auto tsFlag = TemporaryStat::TS_Flag::GetDefault();
+	m_pSecondaryStat->EncodeForRemote(oPacket, tsFlag);
+
+	oPacket->Encode2(pCharacterData->mStat->nJob); // m_nJobCode
+	oPacket->Encode2(pCharacterData->mStat->nSubJob); // m_nSubJobCode
+	oPacket->Encode4(0);//[33 01 00 00] // m_nTotalCHUC
+	pCharacterData->EncodeAvatarLook(oPacket);
+	if (WvsGameConstants::IsZeroJob(pCharacterData->mStat->nJob)) {
+		pCharacterData->EncodeAvatarLook(oPacket);
+	}
+
+	//PacketHelper.UnkFunctin6(mplew);
+	{
+		int v7 = 2;
+		do {
+			oPacket->Encode4(0);
+			while (true) {
+				int res = 255;
+				oPacket->Encode1(res);
+				if (res == 255) {
+					break;
+				}
+				oPacket->Encode4(0);
+			}
+			v7 += 36;
+		} while (v7 < 74);
+	}
+
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+
+	//int buffSrc = chr.getBuffSource(MapleBuffStat.SECONDARY_STAT_RideVehicle);
+	//if ((chr.getBuffedValue(MapleBuffStat.SECONDARY_STAT_Flying) != null) && (buffSrc > 0)) {
+	//	addMountId(mplew, chr, buffSrc);
+	//	oPacket->Encode4(chr.getId());
+	//	oPacket->Encode4(0);
+	//}
+	//else {
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+		int size = 0;
+		oPacket->Encode4(size);
+		for (int i = 0; i < size; i++) {
+			oPacket->Encode4(0);
+			oPacket->Encode4(0);
+		}
+	//}
+
+	oPacket->Encode4(0/*Math.min(250, chr.getInventory(MapleInventoryType.CASH).countById(5110000))*/); //頭上「紅心巧克力」個數
+	oPacket->Encode4(0/*chr.getItemEffect()*/);
+	oPacket->Encode4(0);
+	oPacket->Encode4(0/*chr.getTitleEffect()*/);
+	oPacket->Encode4(0/*chr.getDamageSkin()*/);
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+	oPacket->Encode2(-1);
+	oPacket->EncodeStr("");
+	oPacket->EncodeStr("");
+	oPacket->Encode2(-1);
+	oPacket->Encode2(-1);
+	oPacket->Encode1(0);
+	// m_nPortableChairID
+	oPacket->Encode4(/*GameConstants.getInventoryType(chr.getChair()) == MapleInventoryType.SETUP ? chr.getChair() : */0);
+	std::string text = "";
+	oPacket->Encode4(text.size()); 
+	if (text.size()) {
+		oPacket->EncodeStr(text); // m_sPortableChairMsg
+	}
+	oPacket->Encode4(0);
+	oPacket->Encode2(this->GetPosX());
+	oPacket->Encode2(this->GetPosY());
+	oPacket->Encode1(this->GetMoveAction());
+	oPacket->Encode2(this->GetFh());
+
+	/*for (int i = 0; i <= 3; i++) { */
+		//MaplePet pet = chr.getSummonedPet(i);
+		oPacket->Encode1(0/*pet != null*/);
+		/*if (pet == null) {
+			break;
+		}
+		oPacket->Encode4(i);
+		PetPacket.addPetInfo(mplew, chr, pet, false);
+	}*/
+	oPacket->Encode1(0/*chr.getHaku() != null && MapleJob.is陰陽師(chr.getJob())*/);
+	/*if (chr.getHaku() != null && MapleJob.is陰陽師(chr.getJob())) {
+		MapleHaku haku = chr.getHaku();
+		oPacket->Encode4(haku.getObjectId());
+		oPacket->Encode4(40020109);
+		oPacket->Encode1(1);
+		mplew.writePos(haku.getPosition());
+		oPacket->Encode1(0);
+		oPacket->Encode2(haku.getStance());
+		oPacket->Encode1(0);
+	}*/
+	oPacket->Encode4(/*chr.getMount() != null ? chr.getMount().getLevel() : */1); 
+	oPacket->Encode4(/*chr.getMount() != null ? chr.getMount().getExp() : */0);
+	oPacket->Encode4(/*chr.getMount() != null ? chr.getMount().getFatigue() : */0);
+
+	//PacketHelper.addAnnounceBox(mplew, chr);
+	{
+		oPacket->Encode1(0);
+	}
+	// m_bADBoardRemote
+	oPacket->Encode1(/*(chr.getChalkboard() != null) && (chr.getChalkboard().length() > 0) ? 1 : */0);
+	/*if ((chr.getChalkboard() != null) && (chr.getChalkboard().length() > 0)) {
+		oPacket->EncodeStr(chr.getChalkboard());
+	}*/
+
+	/*Triple<List<MapleRing>, List<MapleRing>, List<MapleRing>> rings = chr.getRings(false);
+	List<MapleRing> allrings = rings.getLeft();
+	allrings.addAll(rings.getMid());
+	addRingInfo(mplew, allrings);*/
+	{
+	oPacket->Encode1(0);
+	}
+	//addRingInfo(mplew, allrings);
+	{
+		oPacket->Encode1(0);
+	}
+	//addMRingInfo(mplew, rings.getRight(), chr);
+	{
+		oPacket->Encode1(0);
+	}
+	int v65 = 0;
+	oPacket->Encode1(v65);
+	for (int o = 0; o < v65; o++) {
+		oPacket->Encode4(0);
+	}
+	// m_nDelayedEffectFlag
+	int unk_mask = 0;
+	oPacket->Encode1(/*chr.getStat().Berserk ? 1 : */0); //unk_mask
+	if ((unk_mask & 1) != 0) {
+	}
+	if ((unk_mask & 2) != 0) {
+	}
+	if ((unk_mask & 8) != 0) {
+		oPacket->Encode4(0); // m_tDelayedPvPEffectTime
+	}
+	if ((unk_mask & 0x10) != 0) {
+		oPacket->Encode4(0); // m_tDelayedPvPEffectTime
+	}
+	if ((unk_mask & 0x20) != 0) {
+		oPacket->Encode4(0); // m_tHitPeriodRemain_Revive
+	}
+	// m_nEvanDragonGlide_Riding
+	oPacket->Encode4(0/*chr.getMount().getItemId()*/);
+
+	//if (MapleJob.is凱撒(chr.getJob())) {
+	//	String x = chr.getOneInfo(12860, "extern");
+	//	oPacket->Encode4(x == null ? 0 : Integer.parseInt(x)); // m_nKaiserMorphRotateHueExtern
+	//	x = chr.getOneInfo(12860, "inner");
+	//	oPacket->Encode4(x == null ? 0 : Integer.parseInt(x)); // m_nKaiserMorphRotateHueInnner
+	//	x = chr.getOneInfo(12860, "premium");
+	//	oPacket->Encode1(x == null ? 0 : Integer.parseInt(x)); // m_bKaiserMorphPrimiumBlack
+	//}
+
+	oPacket->Encode1(0);
+	oPacket->Encode4(0); // CUser::SetMakingMeisterSkillEff
+
+					   //PacketHelper.addFarmInfo(mplew, chr.getClient(), 0);
+
+	for (int i = 0; i < 5; i++) {
+		oPacket->Encode1(-1); // m_aActiveEventNameTag
+	}
+
+	// m_CustomizeEff.sEffectInfo
+	int v84 = 0;
+	oPacket->Encode4(v84);
+	if (v84 > 0) {
+		oPacket->EncodeStr("");
+	}
+	oPacket->Encode1(1); // m_bSoulEffect
+	if (false) {
+		int v87 = 0;
+		oPacket->Encode4(v87);
+		for (int i = 0; i < v87; i++) {
+			oPacket->Encode4(0);
+		}
+	}
+	// CUser::SetFlareBlink
+	// m_pFlameWizardHelper.p
+	bool v90 = false;
+	oPacket->Encode1(v90);
+	if (v90) {
+		bool v91 = false;
+		oPacket->Encode1(v91);
+		if (v91) {
+			oPacket->Encode4(0);
+			oPacket->Encode4(0);
+			oPacket->Encode2(0);
+			oPacket->Encode2(0);
+		}
+	}
+
+	oPacket->Encode1(0); // for CUser::StarPlanetRank::Decode
+	oPacket->Encode4(0); // for CUser::DecodeStarPlanetTrendShopLook
+	oPacket->Encode4(0); // for CUser::DecodeTextEquipInfo
+
+	oPacket->Encode1(0); // CUser::DecodeFreezeHotEventInfo
+	oPacket->Encode4(0); // CUser::DecodeEventBestFriendInfo
+	oPacket->Encode4(0);
+
+	oPacket->Encode1(0);
+
+	oPacket->Encode4(0);
+
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+
+	oPacket->Encode4(0); // for
 }
 
 void User::MakeLeaveFieldPacket(OutPacket * oPacket)
@@ -330,7 +581,7 @@ void User::OnPacket(InPacket *iPacket)
 	int nType = (unsigned short)iPacket->Decode2();
 	switch (nType)
 	{
-	case 0x16B:
+	case EPacketFlags::CLIENT_PACKET::CP_UserRequestInstanceTable:
 	{
 		std::string strSkill = iPacket->DecodeStr();
 		int nLVL1 = iPacket->Decode4();
@@ -345,36 +596,48 @@ void User::OnPacket(InPacket *iPacket)
 		SendPacket(&oPacket);
 		break;
 	}
-	case ClientPacketFlag::OnUserChat:
+	case EPacketFlags::CLIENT_PACKET::CP_UserChat:
 		OnChat(iPacket);
 		break;
-	case ClientPacketFlag::OnUserTransferFieldRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_UserTransferFieldRequest:
 		OnTransferFieldRequest(iPacket);
 		break;
-	case ClientPacketFlag::OnUserMoveRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_UserMove:
 		m_pField->OnUserMove(this, iPacket);
 		break;
-	case ClientPacketFlag::OnUserChangeSlotRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_UserChangeSlotPositionRequest:
 		QWUInventory::OnChangeSlotPositionRequest(this, iPacket);
 		break;
-	case ClientPacketFlag::OnUserSkillUpRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_UserAbilityUpRequest:
+		OnAbilityUpRequest(iPacket);
+		break;
+	case EPacketFlags::CLIENT_PACKET::CP_UserAbilityMassUpRequest:
+
+		break;
+	case EPacketFlags::CLIENT_PACKET::CP_UserSkillUpRequest:
 		USkill::OnSkillUpRequest(this, iPacket);
 		break;
-	case ClientPacketFlag::OnUserSkillUseRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_UserSkillUseRequest:
 		USkill::OnSkillUseRequest(this, iPacket);
 		break;
-	case ClientPacketFlag::OnUserSkillCancelRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_UserSkillCancelRequest:
 		USkill::OnSkillCancelRequest(this, iPacket);
 		break;
-	case ClientPacketFlag::OnUserAttack_MeleeAttack:
-	case ClientPacketFlag::OnUserAttack_ShootAttack:
-	case ClientPacketFlag::OnUserAttack_MagicAttack:
-	case ClientPacketFlag::OnUserAttack_BodyAttack:
-	case ClientPacketFlag::OnUserAttack_AreaDot:
+	case EPacketFlags::CLIENT_PACKET::CP_UserCharacterInfoRequest:
+		OnCharacterInfoRequest(iPacket);
+		break;
+	case EPacketFlags::CLIENT_PACKET::CP_UserMeleeAttack:
+	case EPacketFlags::CLIENT_PACKET::CP_UserShootAttack:
+	case EPacketFlags::CLIENT_PACKET::CP_UserMagicAttack:
+	case EPacketFlags::CLIENT_PACKET::CP_UserBodyAttack:
+	case EPacketFlags::CLIENT_PACKET::CP_UserAreaDotAttack:
 		OnAttack(nType, iPacket);
 		break;
-	case ClientPacketFlag::CP_UserActivateNickItem:
+	case EPacketFlags::CLIENT_PACKET::CP_UserActivateNickItem:
 		OnUserActivateNickItem(iPacket);
+		break;
+	case EPacketFlags::CLIENT_PACKET::CP_UserDropMoneyRequest:
+
 		break;
 	case ClientPacketFlag::OnChangeCharacterRequest:
 		OnIssueReloginCookie(iPacket);
@@ -489,6 +752,379 @@ void User::SetMovePosition(int x, int y, char bMoveAction, short nFSN)
 	SetPosY(y);
 	SetMoveAction(bMoveAction);
 	SetFh(nFSN);
+}
+
+void User::OnAbilityUpRequest(InPacket *iPacket)
+{
+	int v4 = iPacket->Decode4();
+	long long v6;
+	unsigned int dwFlaga = iPacket->Decode4();
+
+	/*if (!CCheatInspector::InspectExclRequestTime((v2 + 552), v2, v4, 500))
+		CVerboseObj::LogError(v2 + 4, "Illegal ExclRequest : OnAbilityUpRequest");*/
+
+	switch (dwFlaga)
+	{
+		case BasicStat::BS_STR:
+			v6 = QWUser::IncSTR(this, 1, 1);
+			break;
+		case BasicStat::BS_DEX:
+			v6 = QWUser::IncDEX(this, 1, 1);
+			break;
+		case BasicStat::BS_INT:
+			v6 = QWUser::IncINT(this, 1, 1);
+			break;
+		case BasicStat::BS_LUK:
+			v6 = QWUser::IncLUK(this, 1, 1);
+			break;
+		case BasicStat::BS_MaxHP:
+		{
+			int nJob = pCharacterData->mStat->nJob;
+			int maxhp = 0;
+			if (WvsGameConstants::IsBeginnerJob(nJob)) { // Beginner
+				maxhp = 8 + rand() % (12 - 8 + 1);
+			}
+			else if (WvsGameConstants::IsDAvengerJob(nJob)) {
+				maxhp = 30;
+			}
+			else if ((nJob >= 100 && nJob <= 132) || (nJob >= 3200 && nJob <= 3212) || (nJob >= 1100 && nJob <= 1112) || (nJob >= 3100 && nJob <= 3112)) { // Warrior
+				maxhp = 36 + rand() % (42 - 36 + 1);
+			}
+			else if ((nJob >= 200 && nJob <= 232) || (WvsGameConstants::IsEvanJob(nJob)) || (nJob >= 2700 && nJob <= 2712)) { // Magician
+				maxhp = 10 + rand() % (20 - 10 + 1);
+			}
+			else if ((nJob >= 300 && nJob <= 322) || (nJob >= 400 && nJob <= 434) || (nJob >= 1300 && nJob <= 1312) || (nJob >= 1400 && nJob <= 1412) || (nJob >= 3300 && nJob <= 3312) || (nJob >= 2300 && nJob <= 2312)) { // Bowman
+				maxhp = 16 + rand() % (20 - 16 + 1);
+			}
+			else if ((nJob >= 510 && nJob <= 512) || (nJob >= 1510 && nJob <= 1512)) {
+				maxhp = 28 + rand() % (32 - 28 + 1);
+			}
+			else if ((nJob >= 500 && nJob <= 532) || WvsGameConstants::IsJettJob(nJob) || (nJob >= 3500 && nJob <= 3512) || nJob == 1500) { // Pirate
+				maxhp = 18 + rand() % (22 - 18 + 1);
+			}
+			else if (nJob >= 1200 && nJob <= 1212) { // Flame Wizard
+				maxhp = 15 + rand() % (21 - 15 + 1);
+			}
+			else if (nJob >= 2000 && nJob <= 2112) { // Aran
+				maxhp = 38 + rand() % (42 - 38 + 1);
+			}
+			else if (nJob >= 10100 && nJob <= 10112) {
+				maxhp = 48 + rand() % (52 - 48 + 1);
+			}
+			else { // GameMaster
+				maxhp = 18 + rand() % (26 - 18 + 1);
+			}
+			if (maxhp)
+			{
+				printf("Incorrect AP-Up stat Job(%d) : %d\n", nJob, (int)maxhp);
+				ValidateStat();
+				SendCharacterStat(false, 0);
+				return;
+			}
+			v6 = QWUser::IncMHP(this, maxhp, 1);
+			break;
+		}
+		case BasicStat::BS_MaxMP:
+		{
+			int nJob = pCharacterData->mStat->nJob;
+			int maxmp = 0;
+			if (WvsGameConstants::IsBeginnerJob(nJob))
+			{
+				maxmp = 6 + rand() % (8 - 6 + 1);
+			}
+			else if (WvsGameConstants::IsDslayerJobBorn(nJob)
+				|| WvsGameConstants::IsZeroJob(nJob)
+				|| WvsGameConstants::IsJettJob(nJob)
+				|| WvsGameConstants::IsKinesisJob(nJob)
+				|| (nJob / 100 == 65 || nJob == 6001)
+				|| (nJob / 100 == 42 || nJob == 4002))
+			{
+				ValidateStat();
+				SendCharacterStat(false, 0);
+				return;
+			}
+			else if ((nJob >= 200 && nJob <= 232)
+				|| (WvsGameConstants::IsEvanJob(nJob))
+				|| (nJob >= 3200 && nJob <= 3212)
+				|| (nJob >= 1200 && nJob <= 1212))
+			{ // Magician
+				maxmp = 38 + rand() % (40 - 38 + 1);
+			}
+			else if ((nJob >= 300 && nJob <= 322)
+				|| (nJob >= 400 && nJob <= 434)
+				|| (nJob >= 500 && nJob <= 532)
+				|| (nJob >= 3200 && nJob <= 3212)
+				|| (nJob >= 3500 && nJob <= 3512)
+				|| (nJob >= 1300 && nJob <= 1312)
+				|| (nJob >= 1400 && nJob <= 1412)
+				|| (nJob >= 1500 && nJob <= 1512)
+				|| (nJob >= 2300 && nJob <= 2312))
+			{ // Bowman
+				maxmp = 10 + rand() % (12 - 10 + 1);
+			}
+			else if ((nJob >= 100 && nJob <= 132)
+				|| (nJob >= 1100 && nJob <= 1112)
+				|| (nJob >= 2000 && nJob <= 2112))
+			{ // Soul Master
+				maxmp = 6 + rand() % (9 - 6 + 1);
+			}
+			else { // GameMaster
+				maxmp = 6 + rand() % (12 - 6 + 1);
+			}
+			if (maxmp)
+			{
+				printf("Incorrect SP-Up stat Job(%d) : %d\n", nJob, (int)maxmp);
+				ValidateStat();
+				SendCharacterStat(false, 0);
+				return;
+			}
+			v6 = QWUser::IncMMP(this, 1, 1);
+			break;
+		}
+		default:
+		{
+			printf("Incorrect AP-Up stat Job(%d) : %d\n", pCharacterData->mStat->nJob, (int)dwFlaga);
+			ValidateStat();
+			SendCharacterStat(false, 0);
+			return;
+		}
+	}
+	dwFlaga |= BasicStat::BS_AP;
+	QWUser::IncAP(this, -1, 1);
+	User::ValidateStat();
+	User::SendCharacterStat(true, dwFlaga);
+}
+
+void User::OnDropMoneyRequest(InPacket *iPacket)
+{
+	/*if (this->m_nGradeCode & 0x10)
+	{
+		SendCharacterStat(1, 0);
+		return;
+	}*/
+	int tRequestTime = iPacket->Decode4();
+	int nAmounta = iPacket->Decode4();
+
+	if (nAmounta >= 10 && nAmounta <= 50000)
+	{
+		/*if (!CCheatInspector::InspectExclRequestTime(this->m_cheatInspector, this, tRequestTime, 200))
+			CVerboseObj::LogError(&pUser->vfptr, "Illegal ExclRequest : OnDropMoneyRequest");*/
+		if (this->pCharacterData->mLevel->nLevel <= 0xFu)
+		{
+			/*CUser::CheckTradeLimitTime(pUser);*/
+			//int nTradeMoneyLimit = nAmounta + pUser->m_nTradeMoneyLimit;
+			//if (nTradeMoneyLimit > 1000000)
+			//{
+			//	COutPacket::COutPacket(&oPacket, 54, 0);
+			//	//v16 = 0;
+			//	COutPacket::Encode1(&oPacket, 0);
+			//	CUser::SendPacket(pUser, &oPacket);
+			//	//v16 = -1;
+			//	//ZArray<unsigned_char>::RemoveAll(&oPacket.m_aSendBuff);
+			//	return;
+			//}
+			//pUser->m_nTradeMoneyLimit = nTradeMoneyLimit;
+		}
+		/*Field *pField = this->m_pField;
+		if (pField)
+		{
+			if (CWvsPhysicalSpace2D::GetFootholdUnderneath(
+				&pField->m_space2D,
+				pUser->m_ptCurPos.x,
+				pUser->m_ptCurPos.y - 10,
+				&cy))
+			{
+				v8 = pField->m_dropPool.m_bDropEverlasting;
+				pDrop = &pField->m_dropPool;
+				if (v8)
+				{
+					CQWUInventory::MoveMoneyToTemp(pUser, nAmounta);
+				}
+				else
+				{
+					if (!CQWUser::IncMoney(pUser, -nAmounta, 1, 1))
+						return;
+					CUser::SendCharacterStat(pUser, 1, 0x40000u);
+				}
+				Reward::Reward(&reward);
+				nCharacterID = pUser->m_dwCharacterID;
+				reward.nMoney = nAmounta;
+				ptCurPosX = pUser->m_ptCurPos.x;
+				ptCurPosY = pUser->m_ptCurPos.y;
+				v16 = 1;
+				reward.nType = 0;
+				reward.nPeriod = 0;
+				DropPool mDropPool;
+				DropPoolCreate(pDrop, &reward, nCharacterID, 0, 0, 0, ptCurPosX, ptCurPosY, ptCurPosX, cy, 0, 0, 0, 0);
+				if (CUser::IsLogging(pUser))
+					CUser::SendAdminLog(pUser, "Money\t(Type:Drop, Meso:%d)", nAmounta);
+				if (pUser->m_character.characterStat.nMoney > 300000000)
+					CUser::SendMesoLog(pUser, "Trade\t(Type:Throw, Target:, Meso:%d)", nAmounta);
+				v16 = -1;
+				Reward::_Reward(&reward);
+			}
+		}*/
+	}
+}
+
+void User::OnCharacterInfoRequest(InPacket *iPacket)
+{
+	int tRequestTime = iPacket->Decode4();
+	/*if (!CCheatInspector::InspectExclRequestTime(&v2->m_cheatInspector, v2, v3, 200))
+		CVerboseObj::LogError(&v2->vfptr, "Illegal ExclRequest : OnCharacterInfoRequest");*/
+	User::FindUser(iPacket->Decode4());
+
+	OutPacket oPacket;
+	oPacket.Encode2(EPacketFlags::LP_CharacterInfo);
+	oPacket.Encode4(GetUserID());
+	oPacket.Encode1(0); // Boolean
+	oPacket.Encode1(pCharacterData->mLevel->nLevel);
+	oPacket.Encode2(pCharacterData->mStat->nJob);
+	oPacket.Encode2(pCharacterData->mStat->nSubJob);
+	oPacket.Encode1(pCharacterData->mStat->nBattleRank);
+	oPacket.Encode4(pCharacterData->mStat->nPOP);
+	//MapleMarriage marriage = chr.getMarriage();
+	oPacket.Encode1(/*marriage != null && marriage.getId() != */0);
+	//if (marriage != null && marriage.getId() != 0) {
+	//	oPacket.Encode4(marriage.getId()); //marriage id
+	//	oPacket.Encode4(marriage.getHusbandId()); //husband char id
+	//	oPacket.Encode4(marriage.getWifeId()); //wife char id
+	//	oPacket.Encode2(3); //msg type
+	//	oPacket.Encode4(chr.getMarriageItemId()); //ring id husband
+	//	oPacket.Encode4(chr.getMarriageItemId()); //ring id wife
+	//	oPacket.EncodeStr(marriage.getHusbandName(), 15); //husband name
+	//	oPacket.EncodeStr(marriage.getWifeName(), 15); //wife name
+	//}
+	//List prof = chr.getProfessions();
+	oPacket.Encode1(0/*prof.size()*/);
+	/*for (Iterator ii = prof.iterator(); ii.hasNext();) {
+		int i = ((Integer)ii.next());
+		oPacket.Encode2(i);
+	}
+	if (chr.getGuildId() <= 0) {*/
+	oPacket.EncodeStr("-");
+	oPacket.EncodeStr("");
+	/*}
+	else {
+		MapleGuild gs = World.Guild.getGuild(chr.getGuildId());
+		if (gs != null) {
+			mplew.writeMapleAsciiString(gs.getName());
+			if (gs.getAllianceId() > 0) {
+				MapleGuildAlliance allianceName = World.Alliance.getAlliance(gs.getAllianceId());
+				if (allianceName != null) {
+					mplew.writeMapleAsciiString(allianceName.getName());
+				}
+				else {
+					mplew.writeMapleAsciiString("");
+				}
+			}
+			else {
+				mplew.writeMapleAsciiString("");
+			}
+		}
+		else {
+			mplew.writeMapleAsciiString("-");
+			mplew.writeMapleAsciiString("");
+		}
+	}*/
+	oPacket.Encode1(/*isSelf ? -1 : */0);
+	oPacket.Encode1(0);
+	oPacket.EncodeStr("");
+	oPacket.Encode1(0);
+	oPacket.Encode1(0);
+	oPacket.Encode1(0);
+	oPacket.Encode1(0);
+	oPacket.Encode1(0);
+	oPacket.Encode1(0);
+
+	/*for (MaplePet pet : chr.getSummonedPets()) {
+		oPacket.Encode1(1);
+		oPacket.Encode4(chr.getPetIndex(pet));
+		oPacket.Encode4(pet.getPetItemId());
+		mplew.writeMapleAsciiString(pet.getName());
+		oPacket.Encode1(pet.getLevel());
+		oPacket.Encode2(pet.getCloseness());
+		oPacket.Encode1(pet.getFullness());
+		oPacket.Encode2(pet.getFlags());
+		Item inv = chr.getInventory(MapleInventoryType.EQUIPPED).getItem((byte)(pet.getSummonedValue() == 2 ? -130 : pet.getSummonedValue() == 1 ? -114 : -138));
+		oPacket.Encode4(inv == null ? 0 : inv.getItemId());
+		oPacket.Encode4(-1);
+	}*/
+	oPacket.Encode1(0);
+
+	/*int wishlistSize = chr.getWishlistSize();*/
+	oPacket.Encode1(0/*wishlistSize*/);
+	/*if (wishlistSize > 0) {
+		int[] wishlist = chr.getWishlist();
+		for (int x = 0; x < wishlistSize; x++) {
+			oPacket.Encode4(wishlist[x]);
+		}
+	}*/
+
+	//Item medal = chr.getInventory(MapleInventoryType.EQUIPPED).getItem((byte)-46);
+	oPacket.Encode4(0/*medal == null ? 0 : medal.getItemId()*/);
+	//List<Pair<Integer, Long>> medalQuests = chr.getCompletedMedals();
+	oPacket.Encode2(0/*medalQuests.size()*/);
+	/*for (Pair x : medalQuests) {
+		oPacket.Encode4(((Integer)x.left));
+		mplew.writeLong(((Long)x.right));
+	}*/
+
+	bool v3 = false;
+	oPacket.Encode1(v3);
+	//if (v3) {
+	//	// function {
+	//	oPacket.Encode4(0);
+	//	oPacket.Encode4(0);
+	//	oPacket.Encode1(0);
+	//	mplew.writeMapleAsciiString("");
+	//	// } end 
+	//	// function {
+	//	oPacket.Encode4(0);
+	//	oPacket.Encode4(0);
+	//	oPacket.Encode1(0);
+	//	mplew.writeMapleAsciiString("");
+	//	// } end 
+	//	oPacket.Encode2(0);
+
+	//	int v4 = 0;
+	//	oPacket.Encode2(v4);
+	//	for (int i = 0; i < v4; i++) {
+	//		// function {
+	//		oPacket.Encode4(0);
+	//		oPacket.Encode4(0);
+	//		oPacket.Encode1(0);
+	//		mplew.writeMapleAsciiString("");
+	//		// } end 
+	//	}
+	//}
+
+	for (int i = 0; i < 6; i++/*MapleTrait.MapleTraitType t : MapleTrait.MapleTraitType.values()*/) {
+		oPacket.Encode1(0/*chr.getTrait(t).getLevel()*/);
+	}
+
+	//List chairs = new ArrayList();
+	/*for (Item i : chr.getInventory(MapleInventoryType.SETUP).newList()) {
+		if ((i.getItemId() / 10000 == 301) && (!chairs.contains(i.getItemId()))) {
+			chairs.add(i.getItemId());
+		}
+	}*/
+	oPacket.Encode4(0/*chairs.size()*/);
+	/*for (Iterator ii = chairs.iterator(); ii.hasNext();) {
+		int i = ((Integer)ii.next());
+		oPacket.Encode4(i);
+	}*/
+
+	/*List<Integer> medals = new ArrayList<>();
+	for (Item i : chr.getInventory(MapleInventoryType.EQUIP).newList()) {
+		if (i.getItemId() >= 1142000 && i.getItemId() < 1152000) {
+			medals.add(i.getItemId());
+		}
+	}*/
+	oPacket.Encode4(0/*medals.size()*/);
+	/*for (int i : medals) {
+		oPacket.Encode4(i);
+	}*/
 }
 
 void User::OnAvatarModified()
@@ -641,19 +1277,19 @@ void User::OnAttack(int nType, InPacket * iPacket)
 	std::unique_ptr<AttackInfo> pInfo = nullptr;
 	switch (nType)
 	{
-		case ClientPacketFlag::OnUserAttack_MeleeAttack:
+		case EPacketFlags::CLIENT_PACKET::CP_UserMeleeAttack:
 			pInfo.reset(TryParsingMeleeAttack(nType, iPacket));
 			break;
-		case ClientPacketFlag::OnUserAttack_ShootAttack:
+		case EPacketFlags::CLIENT_PACKET::CP_UserShootAttack:
 			pInfo.reset(TryParsingShootAttack(nType, iPacket));
 			break;
-		case ClientPacketFlag::OnUserAttack_MagicAttack:
+		case EPacketFlags::CLIENT_PACKET::CP_UserMagicAttack:
 			pInfo.reset(TryParsingMagicAttack(nType, iPacket));
 			break;
-		case ClientPacketFlag::OnUserAttack_BodyAttack:
+		case EPacketFlags::CLIENT_PACKET::CP_UserBodyAttack:
 			pInfo.reset(TryParsingBodyAttack(nType, iPacket));
 			break;
-		case ClientPacketFlag::OnUserAttack_AreaDot:
+		case EPacketFlags::CLIENT_PACKET::CP_UserAreaDotAttack:
 			pInfo.reset(TryParsingAreaDot(nType, iPacket));
 			break;
 	}

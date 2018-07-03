@@ -736,6 +736,971 @@ void SecondaryStat::EncodeForLocal(OutPacket * oPacket, TemporaryStat::TS_Flag &
 
 void SecondaryStat::EncodeForRemote(OutPacket * oPacket, TemporaryStat::TS_Flag & flag)
 {
+	flag.Encode(oPacket);
+	// (&v743, &TemporaryStatBase::BUFF_58);
+	if (flag & GET_TS_FLAG(Speed)) {
+		oPacket->Encode1(0);
+	}
+	// (&v742, TemporaryStatBase::BUFF_72);
+	if (flag & GET_TS_FLAG(ComboCounter)) {
+		oPacket->Encode1(0);
+	}
+	// (&v741, TemporaryStatBase::BUFF_73);
+	if (flag & GET_TS_FLAG(WeaponCharge)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v740, TemporaryStatBase::BUFF_328);
+	if (flag & GET_TS_FLAG(ElementalCharge)) {
+		oPacket->Encode2(0);
+	}
+	// (&v739, TemporaryStatBase::BUFF_68);
+	if (flag & GET_TS_FLAG(Stun)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v738, TemporaryStatBase::BUFF_192);
+	if (flag & GET_TS_FLAG(AmplifyDamage)) {
+		oPacket->Encode1(0);
+	}
+	// (&v737, TemporaryStatBase::BUFF_71);
+	if (flag & GET_TS_FLAG(Darkness)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v736, TemporaryStatBase::BUFF_70);
+	if (flag & GET_TS_FLAG(Seal)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v735, TemporaryStatBase::BUFF_80);
+	if (flag & GET_TS_FLAG(Weakness)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v734, TemporaryStatBase::BUFF_187);
+	if (flag & GET_TS_FLAG(Frozen2)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v733, TemporaryStatBase::BUFF_81);
+	if (flag & GET_TS_FLAG(Curse)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v732, TemporaryStatBase::BUFF_82);
+	if (flag & GET_TS_FLAG(Slow)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v731, TemporaryStatBase::BUFF_186);
+	if (flag & GET_TS_FLAG(WeaknessMdamage)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v730, TemporaryStatBase::BUFF_191);
+	if (flag & GET_TS_FLAG(PVPDamageSkill)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v729, TemporaryStatBase::BUFF_171);
+	if (flag & GET_TS_FLAG(DisOrder)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v728, TemporaryStatBase::BUFF_174);
+	if (flag & GET_TS_FLAG(Explosion)) {
+		oPacket->Encode1(0);
+	}
+	// (&v727, TemporaryStatBase::BUFF_172);
+	if (flag & GET_TS_FLAG(Thread)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v726, TemporaryStatBase::BUFF_173);
+	if (flag & GET_TS_FLAG(Team)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v725, TemporaryStatBase::BUFF_69);
+	if (flag & GET_TS_FLAG(Poison)) {
+		oPacket->Encode2(0);
+	}
+	// (&v724, TemporaryStatBase::BUFF_69);
+	if (flag & GET_TS_FLAG(Poison)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v723, EnDecode4Byte::BUFF_76);
+	if (flag & GET_TS_FLAG(ShadowPartner)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v722, &TemporaryStatBase::BUFF_61);
+	if (flag & GET_TS_FLAG(DarkSight)) {  //sub_4381CC(v546, 1);
+
+	}
+	// (&v721, TemporaryStatBase::BUFF_67);
+	if (flag & GET_TS_FLAG(SoulArrow)) {  //sub_438514(v546, 1);
+	}
+	// (&v720, TemporaryStatBase::BUFF_83);
+	if (flag & GET_TS_FLAG(Morph)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v719, TemporaryStatBase::BUFF_99);
+	if (flag & GET_TS_FLAG(Ghost)) {
+		oPacket->Encode2(0);
+	}
+	// (&v718, TemporaryStatBase::BUFF_89);
+	if (flag & GET_TS_FLAG(Attract)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v717, TemporaryStatBase::BUFF_242);
+	if (flag & GET_TS_FLAG(Magnet)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v716, TemporaryStatBase::BUFF_243);
+	if (flag & GET_TS_FLAG(MagnetArea)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v715, TemporaryStatBase::BUFF_90);
+	if (flag & GET_TS_FLAG(NoBulletConsume)) {
+		oPacket->Encode4(0);
+	}
+	// (&v714, TemporaryStatBase::BUFF_96);
+	if (flag & GET_TS_FLAG(BanMap)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v713, TemporaryStatBase::BUFF_100);
+	if (flag & GET_TS_FLAG(Barrier)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v712, TemporaryStatBase::BUFF_109);
+	if (flag & GET_TS_FLAG(DojangShield)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v711, TemporaryStatBase::BUFF_101);
+	if (flag & GET_TS_FLAG(ReverseInput)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v710, TemporaryStatBase::BUFF_103);
+	if (flag & GET_TS_FLAG(RespectPImmune)) {
+		oPacket->Encode4(0);
+	}
+	// (&v709, TemporaryStatBase::BUFF_104);
+	if (flag & GET_TS_FLAG(RespectMImmune)) {
+		oPacket->Encode4(0);
+	}
+	// (&v708, TemporaryStatBase::BUFF_105);
+	if (flag & GET_TS_FLAG(DefenseAtt)) {
+		oPacket->Encode4(0);
+	}
+	// (&v707, TemporaryStatBase::BUFF_106);
+	if (flag & GET_TS_FLAG(DefenseState)) {
+		oPacket->Encode4(0);
+	}
+	// (&v706, TemporaryStatBase::BUFF_107);
+	if (flag & GET_TS_FLAG(DojangBerserk)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v705, TemporaryStatBase::BUFF_108);
+	if (flag & GET_TS_FLAG(DojangInvincible)) {//  sub_43975C(v546, 1);
+
+	}
+	// (&v704, TemporaryStatBase::BUFF_120);
+	if (flag & GET_TS_FLAG(ExpBuffRate)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	//// (&v703, TemporaryStatBase::BUFF_416);
+	//if (flag & GET_TS_FLAG(MapleBuffStat.PLAYERS_BUFF11)) {
+	//	oPacket->Encode2(0);
+	//	oPacket->Encode4(0);
+	//}
+	// (&v702, TemporaryStatBase::BUFF_122);
+	if (flag & GET_TS_FLAG(StopMotion)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v701, TemporaryStatBase::BUFF_123);
+	if (flag & GET_TS_FLAG(Fear)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v700, TemporaryStatBase::BUFF_124);
+	if (flag & GET_TS_FLAG(HiddenPieceOn)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v699, TemporaryStatBase::BUFF_126);
+	if (flag & GET_TS_FLAG(MagicResistance)) {
+		oPacket->Encode4(0);
+	}
+	// (&v698, TemporaryStatBase::BUFF_129);
+	if (flag & GET_TS_FLAG(Frozen)) {//  sub_43A18E(v546, 1);
+
+	}
+	// (&v697, TemporaryStatBase::BUFF_130);
+	if (flag & GET_TS_FLAG(AssistCharge)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v696, TemporaryStatBase::BUFF_188);
+	if (flag & GET_TS_FLAG(Frozen2)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v695, TemporaryStatBase::BUFF_169);
+	if (flag & GET_TS_FLAG(Bless)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v694, TemporaryStatBase::BUFF_133);
+	if (flag & GET_TS_FLAG(DrawBack)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v693, TemporaryStatBase::BUFF_135);
+	if (flag & GET_TS_FLAG(FinalCut)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v692, TemporaryStatBase::BUFF_148);
+	if (flag & GET_TS_FLAG(HowlingMaxMP)) {
+		oPacket->Encode1(0);
+	}
+	// (&v691, TemporaryStatBase::BUFF_309);
+	if (flag & GET_TS_FLAG(OnCapsule)) {
+		oPacket->Encode1(0);
+	}
+	// (&v690, TemporaryStatBase::BUFF_309);
+	if (flag & GET_TS_FLAG(OnCapsule)) {//  sub_43A83C(v546, 1);
+
+	}
+	// (&v689, TemporaryStatBase::BUFF_156);
+	if (flag & GET_TS_FLAG(Sneak)) {//  sub_43AB0C(v546, 1);
+
+	}
+	// (&v688, TemporaryStatBase::BUFF_137);
+	if (flag & GET_TS_FLAG(BeastFormDamageUp)) {//  sub_43A512(v546, 1);
+
+	}
+	// (&v687, TemporaryStatBase::BUFF_157);
+	if (flag & GET_TS_FLAG(Mechanic)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v686, TemporaryStatBase::BUFF_160);
+	if (flag & GET_TS_FLAG(BlessingArmor)) {// sub_43AC1A(v546, 1);
+
+	}
+	// (&v685, TemporaryStatBase::BUFF_245);
+	if (flag & GET_TS_FLAG(BlessingArmorIncPAD)) {//  sub_43AC74(v546, 1);
+
+	}
+	// (&v684, TemporaryStatBase::BUFF_166);
+	if (flag & GET_TS_FLAG(Inflation)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v683, TemporaryStatBase::BUFF_175);
+	if (flag & GET_TS_FLAG(BuffLimit)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v682, TemporaryStatBase::BUFF_182);
+	if (flag & GET_TS_FLAG(DarkTornado)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v681, TemporaryStatBase::BUFF_190);
+	if (flag & GET_TS_FLAG(IceKnight)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v680, TemporaryStatBase::BUFF_113);
+	if (flag & GET_TS_FLAG(HideAttack)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v679, TemporaryStatBase::BUFF_196);
+	if (flag & GET_TS_FLAG(IncMaxMP)) {
+	} //sub_43ACCE(v546, 1);
+	  // (&v678, TemporaryStatBase::BUFF_203);
+	if (flag & GET_TS_FLAG(DevilishPower)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v677, EnDecode4Byte::BUFF_205);
+	if (flag & GET_TS_FLAG(SpiritLink)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v676, TemporaryStatBase::BUFF_207);
+	if (flag & GET_TS_FLAG(Event)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v675, TemporaryStatBase::BUFF_215);
+	if (flag & GET_TS_FLAG(Event2)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v674, TemporaryStatBase::BUFF_222);
+	if (flag & GET_TS_FLAG(DeathMark)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v673, TemporaryStatBase::BUFF_241);
+	if (flag & GET_TS_FLAG(PainMark)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v672, TemporaryStatBase::BUFF_224);
+	if (flag & GET_TS_FLAG(Lapidification)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v671, TemporaryStatBase::BUFF_244);
+	if (flag & GET_TS_FLAG(VampDeath)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v670, TemporaryStatBase::BUFF_257);
+	if (flag & GET_TS_FLAG(VampDeathSummon)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v669, TemporaryStatBase::BUFF_225);
+	if (flag & GET_TS_FLAG(VenomSnake)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// 預設Buff********
+	// (&v668, TemporaryStatBase::BUFF_230);
+	if (flag & GET_TS_FLAG(PyramidEffect)) {
+		oPacket->Encode4(-1);
+	}
+	// 預設Buff********
+	// (&v667, TemporaryStatBase::BUFF_231);
+	if (flag & GET_TS_FLAG(KillingPoint)) {
+		oPacket->Encode1(0);
+	}
+	// 預設Buff********
+	// (&v666, TemporaryStatBase::BUFF_434);
+	if (flag & GET_TS_FLAG(PinkbeanRollingGrade)) {
+		oPacket->Encode1(0);
+	}
+	// (&v665, TemporaryStatBase::BUFF_234);
+	if (flag & GET_TS_FLAG(IgnoreTargetDEF)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v664, TemporaryStatBase::BUFF_236);
+	if (flag & GET_TS_FLAG(Invisible)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v663, TemporaryStatBase::BUFF_239);
+	if (flag & GET_TS_FLAG(Judgement)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v662, TemporaryStatBase::BUFF_246);
+	if (flag & GET_TS_FLAG(KeyDownAreaMoving)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v661, TemporaryStatBase::BUFF_248);
+	if (flag & GET_TS_FLAG(StackBuff)) {
+		oPacket->Encode2(0);
+	}
+	// (&v660, TemporaryStatBase::BUFF_249);
+	if (flag & GET_TS_FLAG(BlessOfDarkness)) {
+		oPacket->Encode4(0);
+	}
+	// (&v659, TemporaryStatBase::BUFF_247);
+	if (flag & GET_TS_FLAG(Larkness)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v658, TemporaryStatBase::BUFF_255);
+	if (flag & GET_TS_FLAG(ReshuffleSwitch)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v657, TemporaryStatBase::BUFF_256);
+	if (flag & GET_TS_FLAG(SpecialAction)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v656, TemporaryStatBase::BUFF_258);
+	if (flag & GET_TS_FLAG(StopForceAtomInfo)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v655, EnDecode4Byte::BUFF_259);
+	if (flag & GET_TS_FLAG(SoulGazeCriDamR)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v654, EnDecode4Byte::BUFF_261);
+	if (flag & GET_TS_FLAG(PowerTransferGauge)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v653, TemporaryStatBase::BUFF_262);
+	if (flag & GET_TS_FLAG(AffinitySlug)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v652, TemporaryStatBase::BUFF_271);
+	if (flag & GET_TS_FLAG(SoulExalt)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v651, TemporaryStatBase::BUFF_125);
+	if (flag & GET_TS_FLAG(MagicShield)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v650, TemporaryStatBase::BUFF_253);
+	if (flag & GET_TS_FLAG(SmashStack)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v649, TemporaryStatBase::BUFF_266);
+	if (flag & GET_TS_FLAG(MobZoneState)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v648, TemporaryStatBase::BUFF_267);
+	if (flag & GET_TS_FLAG(GiveMeHeal)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v647, TemporaryStatBase::BUFF_268);
+	if (flag & GET_TS_FLAG(TouchMe)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v646, TemporaryStatBase::BUFF_269);
+	if (flag & GET_TS_FLAG(ComboUnlimited)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v645, TemporaryStatBase::BUFF_269);
+	if (flag & GET_TS_FLAG(ComboUnlimited)) {
+		oPacket->Encode4(0);
+	}
+	// (&v644, TemporaryStatBase::BUFF_270);
+	if (flag & GET_TS_FLAG(ComboUnlimited)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v643, TemporaryStatBase::BUFF_272);
+	if (flag & GET_TS_FLAG(IgnorePCounter)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v642, TemporaryStatBase::BUFF_273);
+	if (flag & GET_TS_FLAG(IgnoreAllCounter)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v641, TemporaryStatBase::BUFF_274);
+	if (flag & GET_TS_FLAG(IgnorePImmune)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v640, TemporaryStatBase::BUFF_275);
+	if (flag & GET_TS_FLAG(IgnoreAllImmune)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v639, TemporaryStatBase::BUFF_276);
+	if (flag & GET_TS_FLAG(FinalJudgement)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v638, TemporaryStatBase::BUFF_333);
+	if (flag & GET_TS_FLAG(KnightsAura)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v637, TemporaryStatBase::BUFF_277);
+	if (flag & GET_TS_FLAG(IceAura)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v636, TemporaryStatBase::BUFF_278);
+	if (flag & GET_TS_FLAG(FireAura)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v635, TemporaryStatBase::BUFF_279);
+	if (flag & GET_TS_FLAG(VengeanceOfAngel)) {  //sub_43D488(v546, 1);
+
+	}
+	// (&v634, TemporaryStatBase::BUFF_280);
+	if (flag & GET_TS_FLAG(HeavensDoor)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v633, TemporaryStatBase::BUFF_202);
+	if (flag & GET_TS_FLAG(DamAbsorbShield)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v632, TemporaryStatBase::BUFF_250);
+	if (flag & GET_TS_FLAG(AntiMagicShell)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v631, TemporaryStatBase::BUFF_134);
+	if (flag & GET_TS_FLAG(NotDamaged)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v630, TemporaryStatBase::BUFF_285);
+	if (flag & GET_TS_FLAG(BleedingToxin)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v629, TemporaryStatBase::BUFF_111);
+	if (flag & GET_TS_FLAG(WindBreakerFinal)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v628, TemporaryStatBase::BUFF_286);
+	if (flag & GET_TS_FLAG(IgnoreMobDamR)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v627, TemporaryStatBase::BUFF_287);
+	if (flag & GET_TS_FLAG(Asura)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v626, TemporaryStatBase::BUFF_289);
+	if (flag & GET_TS_FLAG(UnityOfPower)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v625, TemporaryStatBase::BUFF_290);
+	if (flag & GET_TS_FLAG(Stimulate)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v624, EnDecode4Byte::BUFF_291);
+	if (flag & GET_TS_FLAG(ReturnTeleport)) {
+		oPacket->Encode1(0);
+		oPacket->Encode4(0);
+	}
+	// (&v623, TemporaryStatBase::BUFF_295);
+	if (flag & GET_TS_FLAG(BDR)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v622, TemporaryStatBase::BUFF_300);
+	if (flag & GET_TS_FLAG(ExceedOverload)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v621, TemporaryStatBase::BUFF_302);
+	if (flag & GET_TS_FLAG(BuckShot)) {
+		oPacket->Encode1(0);
+		oPacket->Encode4(0);
+	}
+	// (&v620, TemporaryStatBase::BUFF_304);
+	if (flag & GET_TS_FLAG(SurplusSupply)) {
+		oPacket->Encode1(0/*chr.getXenonSurplus()*/);
+	}
+	// (&v619, TemporaryStatBase::BUFF_307);
+	if (flag & GET_TS_FLAG(NewFlying)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v618, EnDecode4Byte::BUFF_339);
+	if (flag & GET_TS_FLAG(NaviFlying)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v617, TemporaryStatBase::BUFF_308);
+	if (flag & GET_TS_FLAG(AmaranthGenerator)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v616, TemporaryStatBase::BUFF_310);
+	if (flag & GET_TS_FLAG(CygnusElementSkill)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v615, TemporaryStatBase::BUFF_311);
+	if (flag & GET_TS_FLAG(StrikerHyperElectric)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v614, TemporaryStatBase::BUFF_312);
+	if (flag & GET_TS_FLAG(EventPointAbsorb)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v613, TemporaryStatBase::BUFF_313);
+	if (flag & GET_TS_FLAG(EventAssemble)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v612, TemporaryStatBase::BUFF_317);
+	if (flag & GET_TS_FLAG(Albatross)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v611, TemporaryStatBase::BUFF_318);
+	if (flag & GET_TS_FLAG(Translucence)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v610, TemporaryStatBase::BUFF_319);
+	if (flag & GET_TS_FLAG(PoseType)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v609, TemporaryStatBase::BUFF_320);
+	if (flag & GET_TS_FLAG(LightOfSpirit)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v608, TemporaryStatBase::BUFF_321);
+	if (flag & GET_TS_FLAG(ElementSoul)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v607, TemporaryStatBase::BUFF_322);
+	if (flag & GET_TS_FLAG(GlimmeringTime)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v606, TemporaryStatBase::BUFF_332);
+	if (flag & GET_TS_FLAG(Reincarnation)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v605, TemporaryStatBase::BUFF_164);
+	if (flag & GET_TS_FLAG(Beholder)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v604, EnDecode4Byte::BUFF_340);
+	if (flag & GET_TS_FLAG(QuiverCatridge)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v603, TemporaryStatBase::BUFF_344);
+	if (flag & GET_TS_FLAG(ArmorPiercing)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v602, TemporaryStatBase::BUFF_342);
+	if (flag & GET_TS_FLAG(UserControlMob)) {//  sub_43E8EC(v546, 1);
+	}
+	// 預設Buff********
+	// (&v601, TemporaryStatBase::BUFF_345);
+	if (flag & GET_TS_FLAG(ZeroAuraStr)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// 預設Buff********
+	// (&v600, TemporaryStatBase::BUFF_346);
+	if (flag & GET_TS_FLAG(ZeroAuraSpd)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v599, EnDecode4Byte::BUFF_343);
+	if (flag & GET_TS_FLAG(ImmuneBarrier)) {
+		oPacket->Encode4(0);
+	}
+	// (&v598, EnDecode4Byte::BUFF_343);
+	if (flag & GET_TS_FLAG(ImmuneBarrier)) {
+		oPacket->Encode4(0);
+	}
+	// (&v597, TemporaryStatBase::BUFF_420);
+	if (flag & GET_TS_FLAG(NightLordMark)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	//// (&v596, TemporaryStatBase::BUFF_421);
+	//if (flag & GET_TS_FLAG(MapleBuffStat.ANIMAL_SELECT)) {
+	//	oPacket->Encode2(0);
+	//	oPacket->Encode4(0);
+	//}
+	// (&v595, TemporaryStatBase::BUFF_422);
+	if (flag & GET_TS_FLAG(FireBarrier)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v594, TemporaryStatBase::BUFF_458);
+	if (flag & GET_TS_FLAG(DebuffIncHP)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v593, EnDecode4Byte::BUFF_425);
+	/*if (flag & GET_TS_FLAG(MapleBuffStat.IDA_SPECIAL_BUFF_4)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}*/
+	// (&v592, TemporaryStatBase::BUFF_401);
+	if (flag & GET_TS_FLAG(FireBarrier)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v591, TemporaryStatBase::BUFF_326);
+	if (flag & GET_TS_FLAG(FullSoulMP)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+	}
+	// (&v590, TemporaryStatBase::BUFF_250);
+	if (flag & GET_TS_FLAG(AntiMagicShell)) {
+		oPacket->Encode1(0);
+	}
+	// (&v589, EnDecode4Byte::BUFF_138);
+	if (flag & GET_TS_FLAG(Dance)) {
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+	}
+	// (&v588, TemporaryStatBase::BUFF_358);
+	if (flag & GET_TS_FLAG(SpiritGuard)) {
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+	}
+	// (&v587, TemporaryStatBase::BUFF_363);
+	if (flag & GET_TS_FLAG(ComboTempest)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v586, TemporaryStatBase::BUFF_303);
+	if (flag & GET_TS_FLAG(FireBomb)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v585, TemporaryStatBase::BUFF_379);
+	if (flag & GET_TS_FLAG(ComplusionSlant)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v584, TemporaryStatBase::BUFF_380);
+	if (flag & GET_TS_FLAG(JaguarSummoned)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// 預設Buff********
+	// (&v583, TemporaryStatBase::BUFF_385);
+	if (flag & GET_TS_FLAG(BMageAura)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v582, TemporaryStatBase::BUFF_386);
+	if (flag & GET_TS_FLAG(DarkLighting)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v581, TemporaryStatBase::BUFF_387);
+	if (flag & GET_TS_FLAG(AttackCountX)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v580, TemporaryStatBase::BUFF_399);
+	if (flag & GET_TS_FLAG(FireBarrier)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v579, TemporaryStatBase::BUFF_233);
+	if (flag & GET_TS_FLAG(KeyDownMoving)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v578, TemporaryStatBase::BUFF_444);
+	if (flag & GET_TS_FLAG(MichaelSoulLink)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v577, TemporaryStatBase::BUFF_452);
+	if (flag & GET_TS_FLAG(KinesisPsychicEnergeShield)) {
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+	}
+	// (&v576, TemporaryStatBase::BUFF_453);
+	if (flag & GET_TS_FLAG(KinesisPsychicShield)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v575, TemporaryStatBase::BUFF_453);
+	if (flag & GET_TS_FLAG(KinesisPsychicShield)) {
+		oPacket->Encode4(0);
+	}
+	// (&v574, TemporaryStatBase::BUFF_458);
+	if (flag & GET_TS_FLAG(DebuffIncHP)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v573, TemporaryStatBase::BUFF_402);
+	if (flag & GET_TS_FLAG(ChangeFoxMan)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v572, TemporaryStatBase::BUFF_402);
+	if (flag & GET_TS_FLAG(ChangeFoxMan)) {
+		oPacket->Encode4(0);
+	}
+	//// (&v571, TemporaryStatBase::BUFF_409);
+	//if (flag & GET_TS_FLAG(MILITARY_MIGHT_MMPR)) {
+	//	oPacket->Encode2(0);
+	//	oPacket->Encode4(0);
+	//}
+	//// (&v570, TemporaryStatBase::BUFF_403);
+	//if (flag & GET_TS_FLAG(MapleBuffStat.BATTOUJUTSU_SOUL)) {
+	//	oPacket->Encode2(0);
+	//	oPacket->Encode4(0);
+	//}
+	// (&v569, TemporaryStatBase::BUFF_406);
+	/*if (flag & GET_TS_FLAG(MapleBuffStat.SHIKIGAMI)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}*/
+	// (&v568, TemporaryStatBase::BUFF_407);
+	if (flag & GET_TS_FLAG(HayatoChangeMode)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v567, TemporaryStatBase::BUFF_408);
+	if (flag & GET_TS_FLAG(HayatoCombo)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v566, TemporaryStatBase::BUFF_413);
+	/*if (flag & GET_TS_FLAG(HITOKIRI_STRIKE)) {
+		oPacket->Encode4(0);
+	}*/
+	// (&v565, TemporaryStatBase::BUFF_399);
+	if (flag & GET_TS_FLAG(FireBarrier)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v564, TemporaryStatBase::BUFF_415);
+	/*if (flag & GET_TS_FLAG(BELLFLOWER_BARRIER_BOSS_DAMAGE)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}*/
+	// (&v563, TemporaryStatBase::BUFF_86);
+	if (flag & GET_TS_FLAG(Stance)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v562, TemporaryStatBase::BUFF_467);
+	if (flag & GET_TS_FLAG(KinesisPsychicEnergeShield)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v561, TemporaryStatBase::BUFF_417);
+	if (flag & GET_TS_FLAG(AngelicBursterSoulSeeker)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v560, TemporaryStatBase::BUFF_418);
+	/*if (flag & GET_TS_FLAG(BLACKHEART_CURSE)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}*/
+	// (&v559, TemporaryStatBase::BUFF_404);
+	/*if (flag & GET_TS_FLAG(COUNTERATTACK)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}*/
+	// (&v558, EnDecode4Byte::BUFF_146);
+	if (flag & GET_TS_FLAG(Cyclone)) {
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+	}
+	// (&v557, TemporaryStatBase::BUFF_469);
+	if (flag & GET_TS_FLAG(BladeStance)) {
+		oPacket->Encode2(0);
+		oPacket->Encode4(0);
+	}
+	// (&v556, TemporaryStatBase::BUFF_319);
+	if (flag & GET_TS_FLAG(PoseType)) {
+		oPacket->Encode1(0);
+	}
+
+	// 預設Buff********
+	oPacket->Encode1(0);
+	oPacket->Encode1(0);
+	oPacket->Encode1(0);
+
+	// 預設Buff********
+	// (&v555, TemporaryStatBase::BUFF_345);
+	if (flag & GET_TS_FLAG(ZeroAuraStr)) {
+		oPacket->Encode1(0);
+	}
+	// 預設Buff********
+	// (&v554, TemporaryStatBase::BUFF_346);
+	if (flag & GET_TS_FLAG(ZeroAuraSpd)) {
+		oPacket->Encode1(0);
+	}
+	// 預設Buff********
+	// (&v553, TemporaryStatBase::BUFF_385);
+	if (flag & GET_TS_FLAG(BMageAura)) {
+		oPacket->Encode1(0);
+	}
+	// 預設Buff********
+	// (&v552, TemporaryStatBase::BUFF_427);
+	if (flag & GET_TS_FLAG(BattlePvP_Helena_Mark)) {
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+	}
+	// 預設Buff********
+	// (&v551, TemporaryStatBase::BUFF_429);
+	if (flag & GET_TS_FLAG(BattlePvP_LangE_Protection)) {
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+	}
+	// (&v550, TemporaryStatBase::BUFF_444);
+	if (flag & GET_TS_FLAG(MichaelSoulLink)) {
+		oPacket->Encode4(0);
+		oPacket->Encode1(0);
+		oPacket->Encode4(0);
+		oPacket->Encode4(0);
+	}
+
+	// 預設Buff********
+	////////////////////////sub_AEC05E(v535 + 9896, a3);
+	/*StopForceAtom pStopForceAtom = new StopForceAtom();
+	pStopForceAtom.Encode(mplew);*/
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+	oPacket->Encode4(0);
+	///////////////////////
+
+	// 預設Buff********
+	oPacket->Encode4(0); // nViperEnergyCharge
+
+					   // 預設Buff********
+	//TSIndex.encodeAll(mplew, chr);
+
+	if (flag & GET_TS_FLAG(NewFlying)) {
+		oPacket->Encode4(0);
+	}
 }
 
 void SecondaryStat::EncodeIndieTempStat(OutPacket * oPacket, TemporaryStat::TS_Flag & flag)

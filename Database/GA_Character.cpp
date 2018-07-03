@@ -196,7 +196,7 @@ void GA_Character::EncodeSkillRecord(OutPacket * oPacket)
 
 void GA_Character::EncodeAvatarLook(OutPacket *oPacket)
 {
-	mAvatarData->Encode(oPacket);
+	mAvatarData->Encode(this, oPacket);
 }
 
 void GA_Character::Save(bool isNewCharacter)

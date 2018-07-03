@@ -18,7 +18,7 @@ public:
 	static long long int IncMHP(User* pUser, int nInc, bool bOnlyFull);
 	static long long int IncPOP(User* pUser, int nInc, bool bOnlyFull);
 	static long long int IncSP(User* pUser, int nJobLevel, int nInc, bool bOnlyFull);
-	static long long int IncMoney(User* pUser, int nInc, bool bOnlyFull);
+	static long long int IncMoney(User* pUser, int nInc, bool bOnlyFull, int bTotalMoneyChange);
 	static long long int IncAP(User* pUser, int nInc, bool bOnlyFull);
 	static long long int IncMaxHPVal(User* pUser, int nInc, bool bOnlyFull);
 	static long long int IncMaxMPVal(User* pUser, int nInc, bool bOnlyFull);

@@ -4578,6 +4578,10 @@ public:
 	void OnChat(InPacket *iPacket);
 	void OnAttack(int nType, InPacket *iPacket);
 	void OnUserActivateNickItem(InPacket *iPacket);
+	void OnAbilityUpRequest(InPacket *iPacket);
+	void OnCharacterInfoRequest(InPacket *iPacket);
+	void OnDropMoneyRequest(InPacket *iPacket);
+	void OnEmotion(InPacket *iPacket);
 	void OnLevelUp();
 	void PostTransferField(int dwFieldID, Portal* pPortal, int bForce);
 	void SetMovePosition(int x, int y, char bMoveAction, short nFSN);

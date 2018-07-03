@@ -48,22 +48,22 @@ void GW_Avatar::Save(GA_Character *vCharacter, bool newCharacter)
 	mStat->nSkin = nSkin >= 0 ? nSkin : mStat->nSkin;
 }
 
-void GW_Avatar::Encode(OutPacket *oPacket)
+void GW_Avatar::Encode(GA_Character *vCharacter, OutPacket *oPacket)
 {
-	oPacket->Encode1(mCharacter->nGender);
-	oPacket->Encode1(mStat->nSkin);
-	oPacket->Encode4(mStat->nFace);
-	oPacket->Encode4(mStat->nJob);
+	oPacket->Encode1(vCharacter->nGender);
+	oPacket->Encode1(vCharacter->mStat->nSkin);
+	oPacket->Encode4(vCharacter->mStat->nFace);
+	oPacket->Encode4(vCharacter->mStat->nJob);
 	oPacket->Encode1(0); //Mega?
-	oPacket->Encode4(mStat->nHair);
+	oPacket->Encode4(vCharacter->mStat->nHair);
 
-	for (const auto& eqp : aHairEquip)
+	for (const auto& eqp : vCharacter->mAvatarData->aHairEquip)
 	{
 		oPacket->Encode1(eqp.nPOS * -1);
 		oPacket->Encode4(eqp.nItemID);
 	}
 	oPacket->Encode1((char)0xFF);
-	for (const auto& eqp : aUnseenEquip)
+	for (const auto& eqp : vCharacter->mAvatarData->aUnseenEquip)
 	{
 		oPacket->Encode1((eqp.nPOS * -1) - 100);
 		oPacket->Encode4(eqp.nItemID);
@@ -72,34 +72,34 @@ void GW_Avatar::Encode(OutPacket *oPacket)
 	oPacket->Encode1((char)0xFF); //totem
 
 	int cWeaponIdx = -1, weaponIdx = -1, nShieldIdx = -1;
-	for (int i = 0; i < aHairEquip.size(); ++i)
-		if (aHairEquip[i].nPOS == -111)
+	for (int i = 0; i < vCharacter->mAvatarData->aHairEquip.size(); ++i)
+		if (vCharacter->mAvatarData->aHairEquip[i].nPOS == -111)
 			cWeaponIdx = i;
-		else if (aHairEquip[i].nPOS == -11)
+		else if (vCharacter->mAvatarData->aHairEquip[i].nPOS == -11)
 			weaponIdx = i;
-		else if (aHairEquip[i].nPOS == -10)
+		else if (vCharacter->mAvatarData->aHairEquip[i].nPOS == -10)
 			nShieldIdx = i;
 
-		oPacket->Encode4(cWeaponIdx == -1 ? 0 : aHairEquip[cWeaponIdx].nItemID);
-		oPacket->Encode4(weaponIdx == -1 ? 0 : aHairEquip[weaponIdx].nItemID);
-		oPacket->Encode4(nShieldIdx == -1 ? 0 : aHairEquip[nShieldIdx].nItemID);
+		oPacket->Encode4(cWeaponIdx == -1 ? 0 : vCharacter->mAvatarData->aHairEquip[cWeaponIdx].nItemID);
+		oPacket->Encode4(weaponIdx == -1 ? 0 : vCharacter->mAvatarData->aHairEquip[weaponIdx].nItemID);
+		oPacket->Encode4(nShieldIdx == -1 ? 0 : vCharacter->mAvatarData->aHairEquip[nShieldIdx].nItemID);
 
 		oPacket->Encode1(0);
 		oPacket->Encode4(0);
 		oPacket->Encode4(0);
 		oPacket->Encode4(0);
 
-		if (WvsGameConstants::IsDslayerJobBorn(mStat->nJob)
-			|| WvsGameConstants::IsResHybridJob(mStat->nJob)
-			|| WvsGameConstants::IsBeastTamerJob(mStat->nJob))
+		if (WvsGameConstants::IsDslayerJobBorn(vCharacter->mStat->nJob)
+			|| WvsGameConstants::IsResHybridJob(vCharacter->mStat->nJob)
+			|| WvsGameConstants::IsBeastTamerJob(vCharacter->mStat->nJob))
 		{
-			oPacket->Encode4(mCharacter->nDefFaceAcc);
+			oPacket->Encode4(vCharacter->nDefFaceAcc);
 		}
-		if (WvsGameConstants::IsZeroJob(mStat->nJob))
+		if (WvsGameConstants::IsZeroJob(vCharacter->mStat->nJob))
 		{
 			oPacket->Encode1(1);
 		}
-		if (WvsGameConstants::IsBeastTamerJob(mStat->nJob))
+		if (WvsGameConstants::IsBeastTamerJob(vCharacter->mStat->nJob))
 		{
 			oPacket->Encode1(1);
 			oPacket->Encode4(5010116);
@@ -107,8 +107,8 @@ void GW_Avatar::Encode(OutPacket *oPacket)
 			oPacket->Encode4(5010119);
 		}
 
-		oPacket->Encode1(mCharacter->nMixedHairColor);
-		oPacket->Encode1(mCharacter->nMixHairPercent);
+		oPacket->Encode1(vCharacter->nMixedHairColor);
+		oPacket->Encode1(vCharacter->nMixHairPercent);
 		oPacket->Encode1(0);
 		oPacket->Encode4(0);
 }
