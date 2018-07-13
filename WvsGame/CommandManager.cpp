@@ -94,5 +94,10 @@ void CommandManager::Process(User * pUser, const std::string & input)
 				--nLevel;
 			}
 		}
+		else if (token[0] == "#ea")
+		{
+			pUser->ValidateStat();
+			pUser->SendCharacterStat(true, 0);
+		}
 	}
 }

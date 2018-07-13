@@ -101,13 +101,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING;_SILENCE_TR2_NAMESPACE_DEPRECATION_WARNING;_SILENCE_TR2_SYS_NAMESPACE_DEPRECATION_WARNING;_SCL_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>G:\mnwvs196\Poco\Foundation\include;G:\mnwvs196\Poco\Data\include;G:\mnwvs196\Poco\Data\MySQL\include;..\Common\;G:\mnwvs196\Boost</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\楓之谷私服\mnwvs196\lz4-lib\include;G:\mnwvs196\Poco\Foundation\include;G:\mnwvs196\Poco\Data\include;G:\mnwvs196\Poco\Data\MySQL\include;..\Common\;G:\mnwvs196\Boost</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>G:\楓之谷私服\mnwvs196\x64\Debug;G:\mnwvs196\Poco\lib64;G:\mnwvs196\Boost\lib64-msvc-14.0;..\Common;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>G:\楓之谷私服\mnwvs196\x64\Debug;G:\mnwvs196\Poco\lib64;G:\mnwvs196\Boost\lib64-msvc-14.0;..\Common;G:\楓之谷私服\mnwvs196\lz4-lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ScriptLib.lib;WvsLib.lib;DataBase.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

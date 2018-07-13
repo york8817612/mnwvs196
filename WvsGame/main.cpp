@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 	QuestMan::GetInstance()->LoadDemand();
 	ItemInfo::GetInstance()->Initialize();
 	try {
-		//SkillInfo::GetInstance()->IterateSkillInfo();
+		SkillInfo::GetInstance()->Initialize();
 	}
 	catch (...) {}
 

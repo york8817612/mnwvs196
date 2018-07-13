@@ -81,7 +81,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>G:\mnwvs196\Boost\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\mnwvs196\Boost\;G:\楓之谷私服\mnwvs196\lz4-lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>G:\mnwvs196\Boost\lib64-msvc-14.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -119,8 +119,11 @@
     <ClInclude Include="aesopt.h" />
     <ClInclude Include="aestab.h" />
     <ClInclude Include="aes_ni.h" />
+    <ClInclude Include="audio.hpp" />
     <ClInclude Include="brg_endian.h" />
     <ClInclude Include="brg_types.h" />
+    <ClInclude Include="file.hpp" />
+    <ClInclude Include="file_impl.hpp" />
     <ClInclude Include="mapfile.hpp" />
     <ClInclude Include="Memory\Arena.h" />
     <ClInclude Include="Memory\ArenaVector.h" />
@@ -129,6 +132,10 @@
     <ClInclude Include="Memory\MemoryPool.h" />
     <ClInclude Include="Memory\MemoryPoolMan.hpp" />
     <ClInclude Include="Memory\stdinc.h" />
+    <ClInclude Include="node.hpp" />
+    <ClInclude Include="node_impl.hpp" />
+    <ClInclude Include="nx.hpp" />
+    <ClInclude Include="nxfwd.hpp" />
     <ClInclude Include="sprite.hpp" />
     <ClInclude Include="spritedata.hpp" />
     <ClInclude Include="wz.hpp" />
@@ -144,11 +151,15 @@
     <ClCompile Include="aestab.c" />
     <ClCompile Include="aes_modes.c" />
     <ClCompile Include="aes_ni.c" />
+    <ClCompile Include="audio.cpp" />
+    <ClCompile Include="file.cpp" />
     <ClCompile Include="mapfile.cpp" />
     <ClCompile Include="Memory\Arena.cpp" />
     <ClCompile Include="Memory\BufferPool.cpp" />
     <ClCompile Include="Memory\MemoryBlocks.cpp" />
     <ClCompile Include="Memory\MemoryPoolMan.cpp" />
+    <ClCompile Include="node.cpp" />
+    <ClCompile Include="nx.cpp" />
     <ClCompile Include="WzAES.cpp" />
     <ClCompile Include="wzcrypto.cpp" />
     <ClCompile Include="wzimg.cpp" />

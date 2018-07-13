@@ -605,6 +605,9 @@ void User::OnPacket(InPacket *iPacket)
 	case EPacketFlags::CLIENT_PACKET::CP_UserMove:
 		m_pField->OnUserMove(this, iPacket);
 		break;
+	case EPacketFlags::CLIENT_PACKET::CP_UserGatherItemRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_UserSortItemRequest:
+
 	case EPacketFlags::CLIENT_PACKET::CP_UserChangeSlotPositionRequest:
 		QWUInventory::OnChangeSlotPositionRequest(this, iPacket);
 		break;
@@ -639,16 +642,16 @@ void User::OnPacket(InPacket *iPacket)
 	case EPacketFlags::CLIENT_PACKET::CP_UserDropMoneyRequest:
 
 		break;
-	case ClientPacketFlag::OnChangeCharacterRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_RequestReloginCookie:
 		OnIssueReloginCookie(iPacket);
 		break;
-	case ClientPacketFlag::OnSelectNpc:
+	case EPacketFlags::CLIENT_PACKET::CP_UserSelectNpc:
 		OnSelectNpc(iPacket);
 		break;
-	case ClientPacketFlag::OnScriptMessageAnswer:
+	case EPacketFlags::CLIENT_PACKET::CP_UserScriptMessageAnswer:
 		OnScriptMessageAnswer(iPacket);
 		break;
-	case ClientPacketFlag::OnQuestRequest:
+	case EPacketFlags::CLIENT_PACKET::CP_UserQuestRequest:
 		OnQuestRequest(iPacket);
 		break;
 	default:
@@ -814,11 +817,11 @@ void User::OnAbilityUpRequest(InPacket *iPacket)
 			else { // GameMaster
 				maxhp = 18 + rand() % (26 - 18 + 1);
 			}
-			if (maxhp)
+			if (!maxhp)
 			{
 				printf("Incorrect AP-Up stat Job(%d) : %d\n", nJob, (int)maxhp);
 				ValidateStat();
-				SendCharacterStat(false, 0);
+				SendCharacterStat(true, 0);
 				return;
 			}
 			v6 = QWUser::IncMHP(this, maxhp, 1);
@@ -871,26 +874,26 @@ void User::OnAbilityUpRequest(InPacket *iPacket)
 			else { // GameMaster
 				maxmp = 6 + rand() % (12 - 6 + 1);
 			}
-			if (maxmp)
+			if (!maxmp)
 			{
 				printf("Incorrect SP-Up stat Job(%d) : %d\n", nJob, (int)maxmp);
 				ValidateStat();
-				SendCharacterStat(false, 0);
+				SendCharacterStat(true, 0);
 				return;
 			}
-			v6 = QWUser::IncMMP(this, 1, 1);
+			v6 = QWUser::IncMMP(this, maxmp, 1);
 			break;
 		}
 		default:
 		{
 			printf("Incorrect AP-Up stat Job(%d) : %d\n", pCharacterData->mStat->nJob, (int)dwFlaga);
 			ValidateStat();
-			SendCharacterStat(false, 0);
+			SendCharacterStat(true, 0);
 			return;
 		}
 	}
 	dwFlaga |= BasicStat::BS_AP;
-	QWUser::IncAP(this, -1, 1);
+	QWUser::IncAP(this, -1, false);
 	User::ValidateStat();
 	User::SendCharacterStat(true, dwFlaga);
 }
@@ -1027,7 +1030,7 @@ void User::OnCharacterInfoRequest(InPacket *iPacket)
 			mplew.writeMapleAsciiString("");
 		}
 	}*/
-	oPacket.Encode1(/*isSelf ? -1 : */0);
+	oPacket.Encode1(iPacket->Decode4());
 	oPacket.Encode1(0);
 	oPacket.EncodeStr("");
 	oPacket.Encode1(0);
@@ -1125,6 +1128,7 @@ void User::OnCharacterInfoRequest(InPacket *iPacket)
 	/*for (int i : medals) {
 		oPacket.Encode4(i);
 	}*/
+	SendPacket(&oPacket);
 }
 
 void User::OnAvatarModified()

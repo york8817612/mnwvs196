@@ -10,6 +10,9 @@
     <Filter Include="Memory">
       <UniqueIdentifier>{a5469138-92ca-4b31-8b77-e1b56b87d3b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Nx">
+      <UniqueIdentifier>{20df349a-64e0-461b-8cec-c6ed9f0903a7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mapfile.hpp">
@@ -78,6 +81,27 @@
     <ClInclude Include="Memory\stdinc.h">
       <Filter>Memory</Filter>
     </ClInclude>
+    <ClInclude Include="audio.hpp">
+      <Filter>Nx</Filter>
+    </ClInclude>
+    <ClInclude Include="file.hpp">
+      <Filter>Nx</Filter>
+    </ClInclude>
+    <ClInclude Include="file_impl.hpp">
+      <Filter>Nx</Filter>
+    </ClInclude>
+    <ClInclude Include="node.hpp">
+      <Filter>Nx</Filter>
+    </ClInclude>
+    <ClInclude Include="node_impl.hpp">
+      <Filter>Nx</Filter>
+    </ClInclude>
+    <ClInclude Include="nx.hpp">
+      <Filter>Nx</Filter>
+    </ClInclude>
+    <ClInclude Include="nxfwd.hpp">
+      <Filter>Nx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mapfile.cpp">
@@ -127,6 +151,18 @@
     </ClCompile>
     <ClCompile Include="Memory\MemoryPoolMan.cpp">
       <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="audio.cpp">
+      <Filter>Nx</Filter>
+    </ClCompile>
+    <ClCompile Include="file.cpp">
+      <Filter>Nx</Filter>
+    </ClCompile>
+    <ClCompile Include="node.cpp">
+      <Filter>Nx</Filter>
+    </ClCompile>
+    <ClCompile Include="nx.cpp">
+      <Filter>Nx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
