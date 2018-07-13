@@ -1,10 +1,13 @@
 #include "LifePool.h"
-#include "..\Common\Net\InPacket.h"
-#include "..\Common\Net\OutPacket.h"
-#include "..\Common\Net\PacketFlags\ClientPacketFlags.hpp"
-#include "..\Common\Net\PacketFlags\MobPacketFlags.hpp"
-#include "..\Common\Net\PacketFlags\UserPacketFlags.h"
-#include "..\Common\\Net\PacketFlags\EPacketFlags.h"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Net\PacketFlags\MobPacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\UserPacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\MobPacketFlags.hpp"
+//#include "..\WvsLib\Net\PacketFlags\UserPacketFlags.h"
+#include "..\WvsLib\Net\PacketFlags\EPacketFlags.h"
+
+#include "..\WvsLib\Logger\WvsLogger.h"
 
 #include "User.h"
 #include "MobTemplate.h"
@@ -14,9 +17,10 @@
 #include "Drop.h"
 #include "AttackInfo.h"
 #include "SecondaryStat.h"
-#include "WvsGameConstants.hpp"
+#include "..\WvsLib\Constants\WvsGameConstants.hpp"
 
 #include <cmath>
+
 
 LifePool::LifePool()
 	: m_pCtrlNull(new Controller(nullptr))
@@ -39,19 +43,18 @@ void LifePool::Init(Field* pField, int nFieldID)
 {
 	m_pField = pField;
 
-	int sizeX = 1920;
-	int sizeY = 1080; //I dont know
-	int genSize = (int)(((double)sizeX * sizeY) * 0.0000048125f);
-	if (genSize < 1)
-		genSize = 1;
-	else if (genSize >= MAX_MOB_GEN)
-		genSize = MAX_MOB_GEN;
-	m_nMobCapacityMin = genSize;
-	m_nMobCapacityMax = genSize * 2;
+	int nSizeX = 1920;
+	int nSizeY = 1080; //I dont know
+	int nGenSize = (int)(((double)nSizeX * nSizeY) * 0.0000048125f);
+	if (nGenSize < 1)
+		nGenSize = 1;
+	else if (nGenSize >= MAX_MOB_GEN)
+		nGenSize = MAX_MOB_GEN;
+	m_nMobCapacityMin = nGenSize;
+	m_nMobCapacityMax = nGenSize * 2 * pField->GetMobRate();
 
 	auto& mapWz = stWzResMan->GetWz(Wz::Map)["Map"]["Map" + std::to_string(nFieldID / 100000000)][std::to_string(nFieldID)];
 	auto& lifeData = mapWz["life"];
-	printf("Map Size =  %d %d\n", m_pField->GetMapSizeX(), m_pField->GetMapSizeY());
 	for (auto& node : lifeData)
 	{
 		const auto &typeFlag = (std::string)node["type"];
@@ -83,7 +86,7 @@ void LifePool::SetFieldObjAttribute(FieldObj* pFieldObj, WZ::Node& dataNode)
 		pFieldObj->SetTemplateID(atoi(((std::string)dataNode["id"]).c_str()));
 	}
 	catch (std::exception& e) {
-		printf("讀取地圖物件發生錯誤，訊息:%s\n", e.what());
+		WvsLogger::LogFormat(WvsLogger::LEVEL_ERROR, "讀取地圖物件發生錯誤，訊息:%s\n", e.what());
 	}
 }
 
@@ -168,13 +171,18 @@ void LifePool::RemoveMob(Mob * pMob)
 	if (pMob == nullptr)
 		return;
 	auto pController = pMob->GetController();
-	if (pController != nullptr)
+	if (pController->GetUser() != nullptr)
+	{
 		pController->RemoveCtrlMob(pMob);
-	pMob->SendReleaseControllPacket(pController->GetUser(), pMob->GetFieldObjectID());
+		pMob->SendReleaseControllPacket(pController->GetUser(), pMob->GetFieldObjectID());
+	}
+	else
+		m_pCtrlNull->RemoveCtrlMob(pMob);
 	OutPacket oPacket;
 	pMob->MakeLeaveFieldPacket(&oPacket);
 	m_pField->SplitSendPacket(&oPacket, nullptr);
 	m_aMobGen.erase(pMob->GetFieldObjectID());
+	delete pMob;
 }
 
 void LifePool::OnEnter(User *pUser)
@@ -189,12 +197,14 @@ void LifePool::OnEnter(User *pUser)
 		npc.second->SendChangeControllerPacket(pUser);
 		pUser->SendPacket(&oPacket);
 	}
+	//WvsLogger::LogFormat("LifePool::OnEnter : Total Mob = %d\n", m_aMobGen.size());
 	for (auto& mob : m_aMobGen)
 	{
 		OutPacket oPacket;
 		mob.second->MakeEnterFieldPacket(&oPacket);
 		pUser->SendPacket(&oPacket);
 	}
+	//WvsLogger::LogFormat("LifePool::OnEnter : Total Controlled = %d Null Controlled = %d\n size of m_hCtrl = %d", m_mController[pUser->GetUserID()]->second->GetTotalControlledCount(), m_pCtrlNull->GetTotalControlledCount(), m_hCtrl.size());
 }
 
 void LifePool::InsertController(User* pUser)
@@ -269,18 +279,22 @@ void LifePool::RedistributeLife()
 	if (nCtrlCount > 0)
 	{
 		auto& nonControlled = m_pCtrlNull->GetMobCtrlList();
-		for (auto pMob : nonControlled)
+		//for (auto pMob : nonControlled)
+		for(auto iter = nonControlled.begin(); iter != nonControlled.end(); )
 		{
+			auto pMob = *iter;
 			pCtrl = m_hCtrl.begin()->second;
 
 			//控制NPC與怪物數量總和超過50，重新配置
 			if (pCtrl->GetTotalControlledCount() >= 50)
 				break;
 			pCtrl->AddCtrlMob(pMob);
-
 			pMob->SetController(pCtrl);
 			pMob->SendChangeControllerPacket(pCtrl->GetUser(), 1);
 			UpdateCtrlHeap(pCtrl);
+
+			m_pCtrlNull->RemoveCtrlMob(pMob);
+			iter = nonControlled.begin();
 		}
 		//NPC
 
@@ -289,7 +303,7 @@ void LifePool::RedistributeLife()
 		//重新調配每個人的怪物控制權
 		if (nCtrlCount >= 2) //至少一個minCtrl與maxCtrl
 		{
-			while (1) 
+			while (true) 
 			{
 				minCtrl = m_hCtrl.begin()->second;
 				maxCtrl = m_hCtrl.rbegin()->second;
@@ -301,7 +315,7 @@ void LifePool::RedistributeLife()
 				if ((nMaxNpcCtrl + nMaxMobCtrl - (nMaxMobCtrl != 0) <= (nMinNpcCtrl - (nMinMobCtrl != 0) + nMinMobCtrl + 1))
 					|| ((nMaxNpcCtrl + nMaxMobCtrl - (nMaxMobCtrl != 0)) <= 20))
 					break;
-				Mob* pMob = maxCtrl->GetMobCtrlList().back();
+				Mob* pMob = *(maxCtrl->GetMobCtrlList().rbegin());
 				maxCtrl->GetMobCtrlList().pop_back();
 				pMob->SendChangeControllerPacket(maxCtrl->GetUser(), 0);
 
@@ -322,7 +336,7 @@ void LifePool::Update()
 
 void LifePool::OnPacket(User * pUser, int nType, InPacket * iPacket)
 {
-	if (nType >= 0x369 && nType <= 0x380)
+	if (nType >= EPacketFlags::CLIENT_PACKET::CP_BEGIN_MOB && nType <= EPacketFlags::CLIENT_PACKET::CP_END_MOB)
 	{
 		OnMobPacket(pUser, nType, iPacket);
 	}
@@ -351,13 +365,13 @@ void LifePool::OnUserAttack(User * pUser, const SkillEntry * pSkill, AttackInfo 
 			pMob->OnMobHit(pUser, dmgValue, pInfo->m_nType);
 			if (pMob->GetHp() <= 0)
 			{
-				RemoveMob(pMob);
 				pMob->OnMobDead(
 					pMob->GetPosX(),
 					pMob->GetPosY(),
 					pUser->GetSecondaryStat()->nMesoUp,
 					pUser->GetSecondaryStat()->nMesoUpByItem
 				);
+				RemoveMob(pMob);
 				break;
 			}
 		}
@@ -366,24 +380,24 @@ void LifePool::OnUserAttack(User * pUser, const SkillEntry * pSkill, AttackInfo 
 
 void LifePool::EncodeAttackInfo(User * pUser, AttackInfo * pInfo, OutPacket * oPacket)
 {
-	oPacket->Encode2(pInfo->m_nType - ClientPacketFlag::OnUserAttack_MeleeAttack + UserPacketFlag::SP_UserMeleeAttack);
+	oPacket->Encode2(pInfo->m_nType - EPacketFlags::CLIENT_PACKET::CP_UserMeleeAttack + EPacketFlags::SERVER_PACKET::LP_UserMeleeAttack);
 	oPacket->Encode4(pUser->GetUserID());
 	oPacket->Encode1(0);
 	oPacket->Encode1(pInfo->m_bAttackInfoFlag);
 	oPacket->Encode1((char)200);
-	if (pInfo->m_nSkillID > 0 || pInfo->m_nType == ClientPacketFlag::OnUserAttack_MagicAttack)
+	if (pInfo->m_nSkillID > 0 || pInfo->m_nType == EPacketFlags::CLIENT_PACKET::CP_UserMagicAttack)
 	{
 		oPacket->Encode1(pInfo->m_nSLV);
 		if (pInfo->m_nSLV > 0)
 			oPacket->Encode4(pInfo->m_nSkillID);
 	}
-	else if (pInfo->m_nType != ClientPacketFlag::OnUserAttack_ShootAttack)
+	else if (pInfo->m_nType != EPacketFlags::CLIENT_PACKET::CP_UserShootAttack)
 		oPacket->Encode1(0);
 
 	if (WvsGameConstants::IsZeroSkill(pInfo->m_nSkillID) && pInfo->m_nSkillID != 100001283)
 		oPacket->Encode1(0);
 
-	if (pInfo->m_nType == ClientPacketFlag::OnUserAttack_ShootAttack)
+	if (pInfo->m_nType == EPacketFlags::CLIENT_PACKET::CP_UserShootAttack)
 		oPacket->Encode1(0);
 
 	if (pInfo->m_nSkillID == 80001850)
@@ -395,8 +409,8 @@ void LifePool::EncodeAttackInfo(User * pUser, AttackInfo * pInfo, OutPacket * oP
 	if (pInfo->m_nSkillID == 40021185 || pInfo->m_nSkillID == 42001006)
 		oPacket->Encode1(0);
 
-	if (pInfo->m_nType == ClientPacketFlag::OnUserAttack_ShootAttack || 
-		pInfo->m_nType == ClientPacketFlag::OnUserAttack_MeleeAttack)
+	if (pInfo->m_nType == EPacketFlags::CLIENT_PACKET::CP_UserShootAttack ||
+		pInfo->m_nType == EPacketFlags::CLIENT_PACKET::CP_UserMeleeAttack)
 		oPacket->Encode1(0);
 
 	oPacket->Encode1(0);
@@ -445,12 +459,12 @@ void LifePool::EncodeAttackInfo(User * pUser, AttackInfo * pInfo, OutPacket * oP
 		oPacket->Encode2(0);
 		oPacket->Encode1(0);
 	}
-	if (pInfo->m_nType == ClientPacketFlag::OnUserAttack_ShootAttack) 
+	if (pInfo->m_nType == EPacketFlags::CLIENT_PACKET::CP_UserShootAttack)
 	{
 		oPacket->Encode2(pUser->GetPosX());
 		oPacket->Encode2(pUser->GetPosY());
 	}
-	else if ((pInfo->m_nType == ClientPacketFlag::OnUserAttack_MagicAttack) && pInfo->m_tKeyDown > 0)
+	else if ((pInfo->m_nType == EPacketFlags::CLIENT_PACKET::CP_UserMagicAttack) && pInfo->m_tKeyDown > 0)
 		oPacket->Encode4(pInfo->m_tKeyDown);
 	
 	if (pInfo->m_nSkillID == 5321000 || 
@@ -500,13 +514,13 @@ Mob * LifePool::GetMob(int nFieldObjID)
 void LifePool::OnMobPacket(User * pUser, int nType, InPacket * iPacket)
 {
 	int dwMobID = iPacket->Decode4();
-	std::lock_guard<std::mutex> lock(m_lifePoolMutex);
+	//std::lock_guard<std::mutex> lock(m_lifePoolMutex);
 
 	auto mobIter = m_aMobGen.find(dwMobID);
 	if (mobIter != m_aMobGen.end()) {
 		switch (nType)
 		{
-		case MobRecvPacketFlag::CP_MobMove:
+		case EPacketFlags::CLIENT_PACKET::CP_MobMove:
 			m_pField->OnMobMove(pUser, mobIter->second, iPacket);
 			break;
 		}

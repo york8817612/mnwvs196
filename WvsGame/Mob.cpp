@@ -4,15 +4,15 @@
 #include "..\Database\GW_ItemSlotBundle.h"
 #include "Reward.h"
 #include "DropPool.h"
-#include "Utility\Random\Rand32.h"
 #include "User.h"
-#include "Net\OutPacket.h"
-#include "Net\PacketFlags\MobPacketFlags.hpp"
-#include "Net\PacketFlags\ClientPacketFlags.hpp"
-#include "Net\PacketFlags\EPacketFlags.h"
+#include "..\WvsLib\Net\PacketFlags\MobPacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\EPacketFlags.h"
 #include "ItemInfo.h"
 #include "QWUser.h"
 #include "Field.h"
+
+#include "..\WvsLib\Random\Rand32.h"
+#include "..\WvsLib\Net\OutPacket.h"
 
 Mob::Mob()
 {
@@ -265,8 +265,6 @@ void Mob::OnMobDead(int nHitX, int nHitY, int nMesoUp, int nMesoUpByItem)
 	);
 	int nOwnType, nOwnPartyID, nLastDamageCharacterID;
 	DistributeExp(nOwnType, nOwnPartyID, nLastDamageCharacterID);
-
-	delete this;
 }
 
 void Mob::DistributeExp(int & refOwnType, int & refOwnParyID, int & refLastDamageCharacterID)
@@ -277,7 +275,7 @@ void Mob::DistributeExp(int & refOwnType, int & refOwnParyID, int & refLastDamag
 		auto pUser = User::FindUser(dmg.first);
 		if (pUser != nullptr)
 		{
-			int nDamaged = dmg.second;
+			auto nDamaged = dmg.second;
 			if (nDamaged >= nTotalHP)
 				nDamaged = nTotalHP;
 			int nIncEXP = (int)floor((double)GetMobTemplate()->m_nEXP * ((double)dmg.second / (double)nTotalHP));

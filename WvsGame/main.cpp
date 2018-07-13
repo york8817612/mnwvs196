@@ -1,27 +1,25 @@
 // WvsGame.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
-#include "Net\asio.hpp"
 #include <iostream>
 #include <thread>
-#include "Net\InPacket.h"
-#include "Net\OutPacket.h"
+
+#include "QuestMan.h"
+#include <functional>
 
 #include "ClientSocket.h"
 #include "WvsGame.h"
-
-#include "Constants\ConfigLoader.hpp"
 #include "ItemInfo.h"
 #include "SkillInfo.h"
-#include "..\Common\Utility\Task\AsnycScheduler.h"
+
+#include "..\WvsLib\Constants\ConfigLoader.hpp"
+#include "..\WvsLib\Task\AsnycScheduler.h"
+#include "..\WvsLib\Logger\WvsLogger.h"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
 
 #include "..\Database\GA_Character.hpp"
 #include "..\Database\GW_MobReward.h"
-
-#include "QuestMan.h"
-
-#include <functional>
 
 void ConnectionAcceptorThread(short nPort)
 {
@@ -32,7 +30,7 @@ void ConnectionAcceptorThread(short nPort)
 
 void CheckSkillInfoLoading(int i)
 {
-	printf("%d:%d\n", i, rand());
+	//printf("%d:%d\n", i, rand());
 	/*int count = SkillInfo::GetInstance()->GetLoadingSkillCount();
 	if (count == 0)
 		stWzResMan->ReleaseMemory();*/
@@ -108,7 +106,7 @@ int main(int argc, char **argv)
 	QuestMan::GetInstance()->LoadDemand();
 	ItemInfo::GetInstance()->Initialize();
 	try {
-		SkillInfo::GetInstance()->Initialize();
+		SkillInfo::GetInstance()->IterateSkillInfo();
 	}
 	catch (...) {}
 
@@ -117,15 +115,15 @@ int main(int argc, char **argv)
 		ConfigLoader::GetInstance()->LoadConfig(argv[1]);
 	else
 	{
-		std::cout << "Please run this program with command line, and given the config file path." << std::endl;
+		WvsLogger::LogRaw("Please run this program with command line, and given the config file path.\n");
 		return -1;
 	}
 
-	WvsBase::GetInstance<WvsGame>()->SetExternalIP(ConfigLoader::GetInstance()->StrValue("externalIP"));
-	WvsBase::GetInstance<WvsGame>()->SetExternalPort(ConfigLoader::GetInstance()->IntValue("port"));
+	WvsBase::GetInstance<WvsGame>()->SetExternalIP(ConfigLoader::GetInstance()->StrValue("ExternalIP"));
+	WvsBase::GetInstance<WvsGame>()->SetExternalPort(ConfigLoader::GetInstance()->IntValue("Port"));
 	// start the connection acceptor thread
 
-	std::thread thread1(ConnectionAcceptorThread, ConfigLoader::GetInstance()->IntValue("port"));
+	std::thread thread1(ConnectionAcceptorThread, ConfigLoader::GetInstance()->IntValue("Port"));
 
 	//WvsGameConstants::nGamePort = (argc > 1 ? atoi(argv[1]) : 7575);
 	//WvsGameConstants::strGameDesc = "Channel : " + std::to_string((argc > 1 ? atoi(argv[1]) : 7575) - 7575);

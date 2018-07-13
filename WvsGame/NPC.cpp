@@ -1,8 +1,8 @@
 #include "Npc.h"
 #include "User.h"
-#include "..\Common\Net\InPacket.h"
-#include "..\Common\Net\OutPacket.h"
-#include "..\Common\Net\PacketFlags\EPacketFlags.h"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Net\PacketFlags\EPacketFlags.h"
 #include "MovePath.h"
 
 Npc::Npc()

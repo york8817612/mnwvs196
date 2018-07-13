@@ -1,11 +1,11 @@
 #include "ItemInfo.h"
-#include "..\WvsLib\WzResMan.hpp"
+#include "..\WvsLib\Wz\WzResMan.hpp"
 #include "..\Database\GW_ItemSlotBase.h"
 #include "..\Database\GW_ItemSlotEquip.h"
 #include "..\Database\GW_ItemSlotBundle.h"
-#include "..\Common\Utility\Random\Rand32.h"
+#include "..\WvsLib\Random\Rand32.h"
 
-extern const std::string* GetEquipDataPath(int nEquipId);
+#include "..\WvsLib\Logger\WvsLogger.h"
 
 ItemInfo::ItemInfo()
 {
@@ -25,24 +25,24 @@ ItemInfo * ItemInfo::GetInstance()
 void ItemInfo::Initialize()
 {
 	IterateMapString();
-	printf("[ItemInfo::Initialize]開始載入所有物品名稱[IterateItemString Start]....\n");
+	WvsLogger::LogRaw("[ItemInfo::Initialize]開始載入所有物品名稱[IterateItemString Start]....\n");
 	IterateItemString(nullptr);
-	printf("[ItemInfo::Initialize]物品名稱載入完成[IterateItemString Done]....\n");
+	WvsLogger::LogRaw("[ItemInfo::Initialize]物品名稱載入完成[IterateItemString Done]....\n");
 
 	static auto& eqpWz = stWzResMan->GetWz(Wz::Character);
-	printf("[ItemInfo::Initialize]開始載入所有裝備[IterateEquipItem Start]....\n");
+	WvsLogger::LogRaw("[ItemInfo::Initialize]開始載入所有裝備[IterateEquipItem Start]....\n");
 	//IterateEquipItem(&eqpWz);
-	printf("[ItemInfo::Initialize]裝備載入完成[IterateEquipItem Done]....\n");
+	WvsLogger::LogRaw("[ItemInfo::Initialize]裝備載入完成[IterateEquipItem Done]....\n");
 
-	printf("[ItemInfo::Initialize]開始載入所有物品[IterateBundleItem Start]....\n");
+	WvsLogger::LogRaw("[ItemInfo::Initialize]開始載入所有物品[IterateBundleItem Start]....\n");
 	IterateBundleItem();
-	printf("[ItemInfo::Initialize]物品載入完成[IterateBundleItem Done]....\n");
+	WvsLogger::LogRaw("[ItemInfo::Initialize]物品載入完成[IterateBundleItem Done]....\n");
 	IterateCashItem();
 	RegisterSpecificItems();
 	RegisterNoRollbackItem();
 	RegisterSetHalloweenItem();
 	stWzResMan->ReleaseMemory();
-	printf("[ItemInfo::Initialize]釋放ItemInfo所有Wz記憶體[ReleaseMemory Done]....\n");
+	WvsLogger::LogRaw("[ItemInfo::Initialize]釋放ItemInfo所有Wz記憶體[ReleaseMemory Done]....\n");
 }
 
 void ItemInfo::IterateMapString()
@@ -332,65 +332,8 @@ void ItemInfo::RegisterStateChangeItem(int nItemID, void * pProp)
 
 ItemInfo::EquipItem * ItemInfo::GetEquipItem(int nItemID)
 {
-	if (nItemID < 1000) {
-		return nullptr;
-	}
-
 	auto findIter = m_mEquipItem.find(nItemID);
-	if (findIter != m_mEquipItem.end()) {
-		return findIter->second;
-	}
-	else {
-		if (true) {
-			auto& eqpWz = stWzResMan->GetWz(Wz::Character);
-			auto sEquipPath = GetEquipDataPath(nItemID);
-			if (sEquipPath) {
-				auto& sPath = *sEquipPath;
-				void* pProp = &(eqpWz[sPath][sPath + ".img"]);
-
-				if (pProp && sPath.length()) {
-					ItemInfo::EquipItem* pNewEquip = new ItemInfo::EquipItem();
-					pNewEquip->nItemID = nItemID;
-					pNewEquip->sItemName = m_mItemString[nItemID];
-					//
-					RegisterEquipItemInfo(pNewEquip, nItemID, pProp);
-					//
-					m_mEquipItem[nItemID] = pNewEquip;
-					return pNewEquip;
-				}
-				else {
-					//printf("item(%d) is not exist", nItemID);
-				}
-			}
-		}
-		else {
-			ItemInfo::EquipItem* pNewEquip = new ItemInfo::EquipItem();
-			pNewEquip->nItemID = nItemID;//dummy
-			pNewEquip->sItemName = m_mItemString[nItemID];
-			//
-			memset(&pNewEquip->abilityStat, 0, sizeof(pNewEquip->abilityStat));
-			memset(&pNewEquip->incStat, 0, sizeof(pNewEquip->incStat));
-			pNewEquip->nrSTR = 0;
-			pNewEquip->nrINT = 0;
-			pNewEquip->nrDEX = 0;
-			pNewEquip->nrLUK = 0;
-			pNewEquip->nrPOP = 0;
-			pNewEquip->nrJob = -1;//all
-			pNewEquip->nrLevel = 0;
-			//pNewEquip->nrMobLevel = 0;
-			//pNewEquip->nRUC = 0;
-			pNewEquip->nSellPrice = 100;
-			pNewEquip->nSwim = 0;
-			//pNewEquip->nTamingMob = 0;
-			pNewEquip->nKnockBack = 0;
-			pNewEquip->dwPetAbilityFlag = 0;
-			//stWzResMan->ReleaseMemory();
-			//
-			m_mEquipItem[nItemID] = pNewEquip;
-			return pNewEquip;
-		}
-	}
-	return nullptr;
+	return (findIter != m_mEquipItem.end() ? findIter->second : nullptr);
 }
 
 ItemInfo::StateChangeItem * ItemInfo::GetStateChangeItem(int nItemID)

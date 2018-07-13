@@ -4,7 +4,7 @@
 #include "Field.h"
 #include "DropPool.h"
 #include "SkillInfo.h"
-#include "..\Common\Net\InPacket.h"
+#include "..\WvsLib\Net\InPacket.h"
 #include "..\Database\GW_ItemSlotBase.h"
 #include "..\Database\GW_ItemSlotBundle.h"
 #include "..\Database\GA_Character.hpp"
@@ -135,7 +135,7 @@ bool QWUInventory::PickUpMoney(User* pUser, bool byPet, int nAmount)
 
 bool QWUInventory::PickUpItem(User * pUser, bool byPet, GW_ItemSlotBase * pItem)
 {
-	printf("Pick Up Item Requert\n");
+	//printf("Pick Up Item Requert\n");
 	std::lock_guard<std::mutex> lock(pUser->GetLock());
 	std::vector<InventoryManipulator::ChangeLog> aChangeLog;
 	int totalInc = 0;
@@ -153,4 +153,53 @@ bool QWUInventory::PickUpItem(User * pUser, bool byPet, GW_ItemSlotBase * pItem)
 	pUser->SendPacket(&oPacket);
 	pUser->SendCharacterStat(true, 0);
 	return result;
+}
+
+/*
+此處對pUser上鎖
+*/
+bool QWUInventory::RawRemoveItemByID(User * pUser, int nItemID, int nCount)
+{
+	auto pCharacterData = pUser->GetCharacterData();
+	std::lock_guard<std::mutex> lock(pUser->GetLock());
+	std::vector<InventoryManipulator::ChangeLog> aChangeLog;
+	while (nCount > 0)
+	{
+		auto pItem = pCharacterData->GetItemByID(nItemID);
+		if (pItem == nullptr)
+			break;
+		int nRemovedAtCurrentSlot = 0;
+		InventoryManipulator::RawRemoveItem(pCharacterData, pItem->nType, pItem->nPOS, nCount, aChangeLog, &nRemovedAtCurrentSlot, nullptr);
+		nCount -= nRemovedAtCurrentSlot;
+	}
+
+	OutPacket oPacket;
+	InventoryManipulator::MakeInventoryOperation(&oPacket, true, aChangeLog);
+	pUser->SendPacket(&oPacket);
+	pUser->SendCharacterStat(true, 0);
+	return nCount == 0;
+}
+
+/*
+此處對pUser上鎖
+*/
+bool QWUInventory::RawAddItemByID(User * pUser, int nItemID, int nCount)
+{
+	auto pCharacterData = pUser->GetCharacterData();
+	std::lock_guard<std::mutex> lock(pUser->GetLock());
+	std::vector<InventoryManipulator::ChangeLog> aChangeLog;
+	int nTotalAdded = 0;
+	while (nTotalAdded < nCount)
+	{
+		int nAddedAtCurrentSlot = 0;
+		
+		InventoryManipulator::RawAddItem(pCharacterData, nItemID / 1000000, nItemID, nCount, aChangeLog, &nAddedAtCurrentSlot);
+		nTotalAdded += nAddedAtCurrentSlot;
+	}
+
+	OutPacket oPacket;
+	InventoryManipulator::MakeInventoryOperation(&oPacket, true, aChangeLog);
+	pUser->SendPacket(&oPacket);
+	pUser->SendCharacterStat(true, 0);
+	return nTotalAdded == nCount;
 }

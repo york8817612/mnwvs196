@@ -100,14 +100,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>G:\mnwvs196\Poco\Foundation\include;G:\mnwvs196\Poco\Data\include;G:\mnwvs196\Poco\Data\MySQL\include;..\Common\;G:\mnwvs196\Boost;G:\楓之谷私服\mnwvs196\WvsLib</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WVSCENTER;_DEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\Library\poco-1.7.8-all\Foundation\include;..\Common\;..\Library\boost_1_63_0\;..\Library\poco-1.7.8-all\Data\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\x64\Debug;G:\mnwvs196\Poco\lib64;G:\mnwvs196\Boost\lib64-msvc-14.0;..\Common;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>WvsLib.lib;DataBase.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\x64\Debug;..\Library\poco-1.7.8-all\lib64;..\Library\boost_1_63_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>DataBase.lib;WvsLib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -135,53 +135,35 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Foundation\include;I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Data\include;I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Data\MySQL\include;..\Common\;I:\Programming\Utility\boost_1_63_0\</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WVSCENTER;NDEBUG;_CONSOLE;ASIO_STANDALONE;ASIO_MSVC=_MSC_VER;_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\Library\poco-1.7.8-all\Foundation\include;..\Common\;..\Library\boost_1_63_0\;..\Library\poco-1.7.8-all\Data\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Foundation;I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\Foundation\x64\release_static_md;I:\Programming\Utility\poco-1.7.8-all\poco-1.7.8-all\lib64;..\Common;..\x64\Release;I:\Programming\Utility\boost_1_63_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>WvsLib.lib;database.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\Library\poco-1.7.8-all\lib64;..\x64\Debug;..\Library\boost_1_63_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>DataBase.lib;WvsLib.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\Net\crypto.cpp" />
-    <ClCompile Include="..\Common\Net\InPacket.cpp" />
-    <ClCompile Include="..\Common\Net\OutPacket.cpp" />
-    <ClCompile Include="..\Common\Net\PacketFlags\CenterPacketFlags.cpp" />
-    <ClCompile Include="..\Common\Net\PacketFlags\ClientPacketFlags.cpp" />
-    <ClCompile Include="..\Common\Net\PacketFlags\GamePacketFlags.cpp" />
-    <ClCompile Include="..\Common\Net\PacketFlags\LoginPacketFlags.cpp" />
-    <ClCompile Include="..\Common\Net\SocketBase.cpp" />
-    <ClCompile Include="..\Common\Net\WvsBase.cpp" />
-    <ClCompile Include="ChannelEntry.cpp" />
+    <ClCompile Include="LocalServerEntry.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="UserTransferStatus.cpp" />
     <ClCompile Include="WvsCenter.cpp" />
     <ClCompile Include="LocalServer.cpp" />
+    <ClCompile Include="WvsWorld.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\Constants\ConfigLoader.hpp" />
-    <ClInclude Include="..\Common\Constants\CryptoConstants.hpp" />
-    <ClInclude Include="..\Common\Constants\ServerConstants.hpp" />
-    <ClInclude Include="..\Common\Net\asio.hpp" />
-    <ClInclude Include="..\Common\Net\crypto.hpp" />
-    <ClInclude Include="..\Common\Net\InPacket.h" />
-    <ClInclude Include="..\Common\Net\OutPacket.h" />
-    <ClInclude Include="..\Common\Net\PacketFlags\CenterPacketFlags.hpp" />
-    <ClInclude Include="..\Common\Net\PacketFlags\GamePacketFlags.hpp" />
-    <ClInclude Include="..\Common\Net\PacketFlags\LoginPacketFlags.hpp" />
-    <ClInclude Include="..\Common\Net\PacketFlags\PacketFlags.hpp" />
-    <ClInclude Include="..\Common\Net\SocketBase.h" />
-    <ClInclude Include="..\Common\Net\WvsBase.h" />
-    <ClInclude Include="ChannelEntry.h" />
+    <ClInclude Include="LocalServerEntry.h" />
+    <ClInclude Include="UserTransferStatus.h" />
     <ClInclude Include="WvsCenter.h" />
     <ClInclude Include="LocalServer.h" />
+    <ClInclude Include="WvsWorld.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

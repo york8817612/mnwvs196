@@ -5,10 +5,10 @@
 #include "GW_CharacterLevel.h"
 #include "GW_Avatar.hpp"
 
-#include "../Common/Net/InPacket.h"
-#include "../Common/Net/OutPacket.h"
-#include "../Common/Net/SocketBase.h"
-#include "../Common/Net/PacketFlags/CenterPacketFlags.hpp"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Net\SocketBase.h"
+#include "..\WvsLib\Net\PacketFlags\CenterPacketFlags.hpp"
 
 #include "GW_CharacterList.hpp"
 #include "GA_Character.hpp"
@@ -29,7 +29,7 @@ void CharacterDBAccessor::PostLoadCharacterListRequest(SocketBase *pSrv, int uLo
 	OutPacket oPacket;
 	GW_CharacterList chrList;
 	chrList.Load(nAccountID, nWorldID);
-	oPacket.Encode2(CenterPacketFlag::CharacterListResponse);
+	oPacket.Encode2(CenterSendPacketFlag::CharacterListResponse);
 	oPacket.Encode4(uLocalSocketSN);
 	oPacket.Encode4(chrList.nCount);
 	for (int i = 0; i < chrList.nCount; ++i)
@@ -121,7 +121,7 @@ void CharacterDBAccessor::PostCreateNewCharacterRequest(SocketBase *pSrv, int uL
 
 	OutPacket oPacket;
 
-	oPacket.Encode2(CenterPacketFlag::CharacterCreateResponse);
+	oPacket.Encode2(CenterSendPacketFlag::CharacterCreateResponse);
 	oPacket.Encode4(uLocalSocketSN);
 	chrEntry.LoadAvatar(chrEntry.nCharacterID);
 	chrEntry.EncodeAvatar(&oPacket);
@@ -147,21 +147,18 @@ void CharacterDBAccessor::GetDefaultCharacterStat(int *aStat)
 	aStat[STAT_AP] = 0;
 }
 
-void CharacterDBAccessor::PostCharacterDataRequest(SocketBase *pSrv, int nClientSocketID, int nCharacterID)
+void CharacterDBAccessor::PostCharacterDataRequest(SocketBase *pSrv, int nClientSocketID, int nCharacterID, void *oPacket_)
 {
 	GA_Character chrEntry;
 	chrEntry.Load(nCharacterID);
-	OutPacket oPacket;
-	oPacket.Encode2(CenterPacketFlag::CenterMigrateInResult);
-	oPacket.Encode4(nClientSocketID);
-	chrEntry.EncodeCharacterData(&oPacket);
-	pSrv->SendPacket(&oPacket);
+	OutPacket *oPacket = (OutPacket*)oPacket_;
+	chrEntry.EncodeCharacterData(oPacket, false);
 }
 
 void CharacterDBAccessor::OnCharacterSaveRequest(void *iPacket)
 {
 	InPacket *iPacket_ = (InPacket*)iPacket;
 	GA_Character chr;
-	chr.DecodeCharacterData(iPacket_);
+	chr.DecodeCharacterData(iPacket_, true);
 	chr.Save(false);
 }

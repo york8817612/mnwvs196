@@ -1,11 +1,10 @@
 #include "LoginSocket.h"
-#include "Net\InPacket.h"
-#include "Net\OutPacket.h"
-
-#include "Net\PacketFlags\LoginPacketFlags.hpp"
-#include "Net\PacketFlags\ClientPacketFlags.hpp"
-
-#include "WvsLoginConstants.hpp"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Net\PacketFlags\EPacketFlags.h"
+#include "..\WvsLib\Net\PacketFlags\LoginPacketFlags.hpp"
+#include "..\WvsLib\Logger\WvsLogger.h"
+#include "..\WvsLib\Constants\WvsLoginConstants.hpp"
 #include "WvsLogin.h"
 
 LoginSocket::LoginSocket(asio::io_service& serverService)
@@ -19,41 +18,41 @@ LoginSocket::~LoginSocket()
 
 void LoginSocket::OnPacket(InPacket *iPacket)
 {
-	printf("[WvsLogin][LoginSocket::OnPacket]封包接收：");
+	WvsLogger::LogRaw("[WvsLogin][LoginSocket::OnPacket]封包接收：");
 	iPacket->Print();
 	int nType = (unsigned short)iPacket->Decode2();
 
 	switch (nType)
 	{
-	case ClientPacketFlag::CP_RequestStart:
+	case EPacketFlags::CP_RequestStart:
 		OnClientRequestStart();
 		break;
-	case ClientPacketFlag::CP_LoginBackgroundRequest:
+	case EPacketFlags::CP_LoginBackgroundRequest:
 		OnLoginBackgroundRequest();
 		break;
-	case ClientPacketFlag::CP_CheckPasswordRequest:
+	case EPacketFlags::CP_CheckLoginAuthInfo:
 		OnCheckPasswordRequst(iPacket);
 		break;
-	case ClientPacketFlag::CP_SelectWorld:
+	case EPacketFlags::CP_SelectWorld:
 		OnClientSelectWorld(iPacket);
 		break;
-	case ClientPacketFlag::CP_SecondPasswordCheck:
+	case EPacketFlags::CP_CheckSPWExistRequest:
 		OnClientSecondPasswdCheck();
 		break;
-	case ClientPacketFlag::CP_CheckDuplicatedID:
+	case EPacketFlags::CP_CheckDuplicatedID:
 		OnClientCheckDuplicatedID(iPacket);
 		break;
-	case ClientPacketFlag::CP_CreateNewCharactar:
+	case EPacketFlags::CP_CreateNewCharacter:
 		OnClientCreateNewCharacter(iPacket);
 		break;
-	case ClientPacketFlag::CP_SelectCharacter:
-	case ClientPacketFlag::CP_DirectGoToField:
+	case EPacketFlags::CP_SelectCharacter:
+	case EPacketFlags::CP_DirectGoToField:
 		OnClientSelectCharacter(iPacket);
 		break;
-	case ClientPacketFlag::CP_RequestServerList:
+	case EPacketFlags::CP_WorldInfoRequest:
 		SendWorldInformation();
 		break;
-	case ClientPacketFlag::CP_DeleteCharacter:
+	case EPacketFlags::CP_DeleteCharacter:
 		break;
 	}
 }
@@ -66,7 +65,7 @@ void LoginSocket::OnClosed()
 void LoginSocket::OnClientRequestStart()
 {
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::ClientStartResponse);
+	oPacket.Encode2(LoginSendPacketFlag::Client_ClientStartResponse);
 	oPacket.Encode4(0);
 	SendPacket(&oPacket);
 }
@@ -75,7 +74,7 @@ void LoginSocket::OnLoginBackgroundRequest()
 {
 	static std::string backgrounds[] = { "MapLogin", "MapLogin1", "MapLogin2" };
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::ClientLoginBackgroundResponse);
+	oPacket.Encode2(LoginSendPacketFlag::Client_ClientLoginBackgroundResponse);
 	oPacket.EncodeStr(backgrounds[rand() % (sizeof(backgrounds) / sizeof(backgrounds[0]))]);
 	oPacket.Encode4(0);
 	oPacket.Encode1(1);
@@ -89,7 +88,7 @@ void LoginSocket::OnCheckPasswordRequst(InPacket *iPacket)
 	auto sPasswd = iPacket->DecodeStr();
 
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::CheckPasswordResponse);
+	oPacket.Encode2(LoginSendPacketFlag::Client_CheckPasswordResponse);
 	oPacket.Encode1(0);
 	oPacket.EncodeStr(sID);
 	oPacket.Encode4(1); //Account ID
@@ -109,7 +108,7 @@ void LoginSocket::OnCheckPasswordRequst(InPacket *iPacket)
 	oPacket.Encode1(0);
 	oPacket.Encode1(0);
 	oPacket.Encode1(1);
-	oPacket.Encode1(0xC2);
+	oPacket.Encode1((char)0xC2);
 	for (int i = 1; i <= 23; ++i)
 	{
 		oPacket.Encode1(0x01);
@@ -126,33 +125,38 @@ void LoginSocket::OnCheckPasswordRequst(InPacket *iPacket)
 void LoginSocket::SendChannelBackground()
 {
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::ClientChannelBackgroundResponse);
+	oPacket.Encode2(LoginSendPacketFlag::Client_ClientChannelBackgroundResponse);
 	oPacket.Encode1(0);
+	SendPacket(&oPacket);
 }
 
 void LoginSocket::SendWorldInformation()
 {
-	//SendChannelBackground();
+	SendChannelBackground();
 
-	int numCenter = sizeof(WvsLoginConstants::CenterServerList) / sizeof(WvsLoginConstants::CenterServerList[0]);
-	for (int i = 0; i < numCenter; ++i)
+	int nCenterCount = WvsBase::GetInstance<WvsLogin>()->GetCenterCount();
+	for (int i = 0; i < nCenterCount; ++i)
 	{
 		auto& pCenter = WvsBase::GetInstance<WvsLogin>()->GetCenter(i);
-		if (pCenter && pCenter->IsConnected())
+		if (pCenter && pCenter->CheckSocketStatus(SocketBase::SocketStatus::eConnected))
 		{
 			OutPacket oPacket;
-			oPacket.Encode2(LoginPacketFlag::WorldInformationResponse);
+			oPacket.Encode2(LoginSendPacketFlag::Client_WorldInformationResponse);
 			oPacket.Encode1(pCenter->GetWorldInfo().nWorldID);
 			oPacket.EncodeStr(pCenter->GetWorldInfo().strWorldDesc);
 			oPacket.Encode1(pCenter->GetWorldInfo().nEventType);
 			oPacket.EncodeStr(pCenter->GetWorldInfo().strEventDesc);
 			oPacket.Encode2(0x64);
 			oPacket.Encode2(0x64);
-			oPacket.Encode1(pCenter->GetWorldInfo().nGameCount);
-			for (int i = 1; i <= pCenter->GetWorldInfo().nGameCount; ++i)
+			int nMaxChannelCount = pCenter->GetWorldInfo().nGameCount;
+			for (int i = 0; i < 30; ++i)
+				if (pCenter->GetWorldInfo().m_aChannelStatus[i] == 1 && i + 1 > nMaxChannelCount)
+					nMaxChannelCount = i + 1;
+			oPacket.Encode1(nMaxChannelCount);
+			for (int i = 1; i <= nMaxChannelCount; ++i)
 			{
 				oPacket.EncodeStr("Channel " + std::to_string(i));
-				oPacket.Encode4(1);
+				oPacket.Encode4(pCenter->GetWorldInfo().m_aChannelStatus[i - 1] == 0 ? 100000 : 1);
 				oPacket.Encode1(pCenter->GetWorldInfo().nWorldID);
 				oPacket.Encode2(i - 1);
 			}
@@ -163,35 +167,42 @@ void LoginSocket::SendWorldInformation()
 		}
 	}
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::WorldInformationResponse);
+	oPacket.Encode2(LoginSendPacketFlag::Client_WorldInformationResponse);
 	oPacket.Encode4(0xFF);
 	SendPacket(&oPacket);
+
+	OutPacket oPacket2;
+	oPacket2.Encode2(0x03);
+	oPacket2.Encode1(1);
+	oPacket2.Encode4(0);
+	oPacket2.EncodeStr("Hello~");
+	SendPacket(&oPacket2);
 }
 
 void LoginSocket::OnClientSelectWorld(InPacket *iPacket)
 {
-	bool isRelogin = iPacket->Decode1() == 1;
-	int worldIndex = iPacket->Decode1();
-	int channelIndex = iPacket->Decode1();
-	if (WvsBase::GetInstance<WvsLogin>()->GetCenter(worldIndex)->IsConnected())
+	bool bIsRelogin = iPacket->Decode1() == 1;
+	int nWorldIndex = iPacket->Decode1();
+	int nChannelIndex = iPacket->Decode1();
+	if (WvsBase::GetInstance<WvsLogin>()->GetCenter(nWorldIndex)->CheckSocketStatus(SocketBase::SocketStatus::eConnected))
 	{
 		OutPacket oPacket;
-		oPacket.Encode2(LoginPacketFlag::RequestCharacterList);
+		oPacket.Encode2(LoginSendPacketFlag::Center_RequestCharacterList);
 		oPacket.Encode4(GetSocketID());
 		oPacket.Encode4(mLoginData.nAccountID);
-		oPacket.Encode1(channelIndex);
-		WvsBase::GetInstance<WvsLogin>()->GetCenter(worldIndex)->SendPacket(&oPacket);
-		nChannelID = channelIndex;
-		nWorldID = worldIndex;
+		oPacket.Encode1(nChannelIndex);
+		WvsBase::GetInstance<WvsLogin>()->GetCenter(nWorldIndex)->SendPacket(&oPacket);
+		nChannelID = nChannelIndex;
+		nWorldID = nWorldIndex;
 	}
 	else
-		printf("[WvsLogin][LoginSocket::OnClientSelectWorld][錯誤]客戶端嘗試連線至不存在的Center Server。\n");
+		WvsLogger::LogRaw(WvsLogger::LEVEL_ERROR, "[WvsLogin][LoginSocket::OnClientSelectWorld][錯誤]客戶端嘗試連線至不存在的Center Server。\n");
 }
 
 void LoginSocket::OnClientSecondPasswdCheck()
 {
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::ClientSecondPasswordResult);
+	oPacket.Encode2(LoginSendPacketFlag::Client_ClientSecondPasswordResult);
 	oPacket.Encode1(0x03);
 	oPacket.Encode1(0x00);
 	SendPacket(&oPacket);
@@ -202,7 +213,7 @@ void LoginSocket::OnClientCheckDuplicatedID(InPacket *iPacket)
 	std::string strName = iPacket->DecodeStr();
 
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::ClientCheckDuplicatedIDResult);
+	oPacket.Encode2(LoginSendPacketFlag::Client_ClientCheckDuplicatedIDResult);
 	oPacket.EncodeStr(strName);
 	oPacket.Encode1(0); //SUCCESS
 
@@ -212,7 +223,7 @@ void LoginSocket::OnClientCheckDuplicatedID(InPacket *iPacket)
 void LoginSocket::OnClientCreateNewCharacter(InPacket *iPacket)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::RequestCreateNewCharacter);
+	oPacket.Encode2(LoginSendPacketFlag::Center_RequestCreateNewCharacter);
 	oPacket.Encode4(GetSocketID());
 	oPacket.Encode4(mLoginData.nAccountID);
 	oPacket.EncodeBuffer(iPacket->GetPacket() + 2, iPacket->GetPacketSize() - 2); //SKIP OPCODE
@@ -222,7 +233,7 @@ void LoginSocket::OnClientCreateNewCharacter(InPacket *iPacket)
 void LoginSocket::OnClientSelectCharacter(InPacket *iPacket)
 {
 	OutPacket oPacket;
-	oPacket.Encode2(LoginPacketFlag::RequestGameServerInfo);
+	oPacket.Encode2(LoginSendPacketFlag::Center_RequestGameServerInfo);
 	oPacket.Encode4(GetSocketID());
 	oPacket.Encode4(nWorldID);
 	oPacket.Encode4(nChannelID);

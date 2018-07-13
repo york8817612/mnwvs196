@@ -1,5 +1,5 @@
 #include "QuestMan.h"
-#include "..\WvsLib\WzResMan.hpp"
+#include "..\WvsLib\Wz\WzResMan.hpp"
 #include "ActItem.h"
 #include "ActQuest.h"
 #include "ActSP.h"
@@ -40,6 +40,8 @@ void QuestMan::LoadDemand()
 	auto &questInfoImg = stWzResMan->GetWz(Wz::Quest)["QuestInfo"];
 	for (auto& questImg : questInfoImg)
 		if ((int)questImg["autoStart"] == 1)
+			m_mAutoStartQuest.insert(atoi(questImg.Name().c_str()));
+		else if ((int)questImg["autoComplete"] == 1)
 			m_mAutoCompleteQuest.insert(atoi(questImg.Name().c_str()));
 }
 
@@ -62,6 +64,7 @@ void QuestMan::RegisterAct(void * pProp)
 		pAct->nBuffItemID = actNode["buffItemID"];
 		pAct->nTransferField = actNode["transferField"];
 		pAct->nNextQuest = actNode["nextQuest"];
+		pAct->sInfo = actNode["info"];
 
 		auto& itemNode = actNode["item"];
 		for (auto& itemAct : itemNode)
@@ -73,6 +76,9 @@ void QuestMan::RegisterAct(void * pProp)
 			pActItem->nJobEx = itemAct["jobEx"];
 			pActItem->nPeriod = itemAct["period"];
 			pActItem->nProp = itemAct["prop"];
+			pActItem->nGender = 2;
+			if (itemAct["gender"])
+				pActItem->nGender = itemAct["gender"];
 			//pActItem->strPotentialGrade = (std::string)itemAct["potentialGrade"];
 			pAct->aActItem.push_back(pActItem);
 		}
@@ -180,6 +186,12 @@ QuestMan * QuestMan::GetInstance()
 	return pInstance;
 }
 
+bool QuestMan::IsAutoStartQuest(int nQuestID)
+{
+	auto findIter = m_mAutoStartQuest.find(nQuestID);
+	return findIter != m_mAutoStartQuest.end();
+}
+
 bool QuestMan::IsAutoCompleteQuest(int nQuestID)
 {
 	auto findIter = m_mAutoCompleteQuest.find(nQuestID);
@@ -235,7 +247,7 @@ bool QuestMan::CheckStartDemand(int nQuestID, User * pUser)
 			false,
 			false,
 			false,
-			false) < skill.second);
+			false) < skill.second)
 			return false;
 
 	//Check item req.
@@ -246,4 +258,78 @@ bool QuestMan::CheckStartDemand(int nQuestID, User * pUser)
 			return false;
 	}
 	return true;
+}
+
+bool QuestMan::CheckCompleteDemand(int nQuestID, User * pUser)
+{
+	auto findIter = m_mCompleteDemand.find(nQuestID);
+	if (findIter == m_mCompleteDemand.end())
+		return false;
+	auto pDemand = findIter->second;
+
+	//Check level req.
+	int nLevel = pUser->GetCharacterData()->mLevel->nLevel;
+	if ((pDemand->nLVMax != 0 && nLevel > pDemand->nLVMax) ||
+		(pDemand->nLVMin != 0 && nLevel < pDemand->nLVMin))
+		return false;
+
+	//Check field req.
+	bool bCheck = pDemand->m_aFieldEnter.size() == 0 ? true : false;
+	for (auto& field : pDemand->m_aFieldEnter)
+		if (pUser->GetField()->GetFieldID() == field)
+		{
+			bCheck = true;
+			break;
+		}
+	if (!bCheck)
+		return false;
+
+	//Check job req.
+	bCheck = pDemand->m_aDemandJob.size() == 0 ? true : false;
+	for (auto& job : pDemand->m_aDemandJob)
+		if (pUser->GetCharacterData()->mStat->nJob == job)
+		{
+			bCheck = true;
+			break;
+		}
+	if (!bCheck)
+		return false;
+
+	//Check quest req.
+	for (auto& quest : pDemand->m_mDemandQuest)
+		if (QWUQuestRecord::GetState(pUser, quest.first) < quest.second)
+			return false;
+
+	//Check skill req.
+	for (auto& skill : pDemand->m_mDemandSkill)
+		if (SkillInfo::GetInstance()->GetSkillLevel(
+			pUser->GetCharacterData(),
+			skill.second,
+			nullptr,
+			false,
+			false,
+			false,
+			false) < skill.second)
+			return false;
+
+	//Check item req.
+	for (auto& item : pDemand->m_mDemandItem)
+	{
+		auto nCount = pUser->GetCharacterData()->GetItemCount(item.first / 1000000, item.first);
+		if (nCount < item.second)
+			return false;
+	}
+	return true;
+}
+
+QuestAct * QuestMan::GetStartAct(int nQuestID)
+{
+	auto findIter = m_mStartAct.find(nQuestID);
+	return findIter != m_mStartAct.end() ? findIter->second : nullptr;
+}
+
+QuestAct * QuestMan::GetCompleteAct(int nQuestID)
+{
+	auto findIter = m_mCompleteAct.find(nQuestID);
+	return findIter != m_mCompleteAct.end() ? findIter->second : nullptr;
 }

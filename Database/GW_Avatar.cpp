@@ -1,8 +1,8 @@
 #include "GW_Avatar.hpp"
 #include "WvsUnified.h"
 
-#include "..\Common\Net\OutPacket.h"
-#include "..\WvsGame\WvsGameConstants.hpp"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Constants\WvsGameConstants.hpp"
 
 GW_Avatar::GW_Avatar()
 {

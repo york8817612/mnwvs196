@@ -1,4 +1,4 @@
-#include "Net\OutPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
 #include "MobStat.h"
 
 MobStat::MobStat()

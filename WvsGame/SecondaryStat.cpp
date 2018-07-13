@@ -3,9 +3,14 @@
 #include "SkillInfo.h"
 #include "SkillEntry.h"
 #include "SkillLevelData.h"
+#include "USkill.h"
+#include "User.h"
 #include "..\Database\GA_Character.hpp"
 #include "..\Database\GW_ItemSlotEquip.h"
-#include "..\Common\Net\OutPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Net\InPacket.h"
+
+#include "..\WvsLib\Logger\WvsLogger.h"
 
 #define CHECK_TS_NORMAL(name) \
 if (flag & GET_TS_FLAG(name)) \
@@ -730,7 +735,7 @@ void SecondaryStat::EncodeForLocal(OutPacket * oPacket, TemporaryStat::TS_Flag &
 	oPacket->Encode4(0);
 	oPacket->Encode4(0);
 
-	printf("Encode Local TS : \n");
+	WvsLogger::LogRaw(WvsLogger::LEVEL_INFO, "Encode Local TS : \n");
 	oPacket->Print();
 }
 
@@ -1743,10 +1748,58 @@ bool SecondaryStat::EnDecode4Byte(TemporaryStat::TS_Flag & flag)
 		|| (flag & GET_TS_FLAG(MagnetArea))
 		|| (flag & GET_TS_FLAG(RideVehicle)))
 		return true;
-	printf("EnDecode4Byte [False]\n");
+	WvsLogger::LogRaw(WvsLogger::LEVEL_INFO, "EnDecode4Byte [False]\n");
 	return false;
 }
 
 void SecondaryStat::ResetByTime(int tCur)
 {
+}
+
+void SecondaryStat::DecodeInternal(User* pUser, InPacket * iPacket)
+{
+	bool bDecodeInternal = iPacket->Decode1() == 1;
+	if (!bDecodeInternal)
+		return;
+	int nChannelID = iPacket->Decode4();
+
+	//Decode Temporary Internal
+	int nCount = iPacket->Decode4(), nSkillID, tDurationRemained, nSLV;
+	for (int i = 0; i < nCount; ++i)
+	{
+		nSkillID = iPacket->Decode4();
+		tDurationRemained = iPacket->Decode4();
+		nSLV = iPacket->Decode4();
+		WvsLogger::LogFormat("Decode Internal ID = %d, tValue = %d, nSLV = %d\n", nSkillID, tDurationRemained, nSLV);
+		USkill::DoActiveSkill_SelfStatChange(
+			pUser,
+			SkillInfo::GetInstance()->GetSkillByID(nSkillID),
+			nSLV,
+			nullptr,
+			0,
+			false,
+			tDurationRemained,
+			true
+		);
+	}
+}
+
+void SecondaryStat::EncodeInternal(User* pUser, OutPacket * oPacket)
+{
+	std::lock_guard<std::mutex> userGuard(pUser->GetLock());
+
+	oPacket->Encode4(pUser->GetChannelID());
+
+	//Encode Temporary Internal
+	auto pSS = pUser->GetSecondaryStat();
+	oPacket->Encode4((int)pSS->m_mSetByTS.size());
+	for (auto& setFlag : pSS->m_mSetByTS)
+	{
+		int nSkillID = *(setFlag.second.second[1]);
+		int tDurationRemained = setFlag.second.first;
+		int nSLV = *(setFlag.second.second[3]);
+		oPacket->Encode4(nSkillID);
+		oPacket->Encode4(tDurationRemained);
+		oPacket->Encode4(nSLV);
+	}
 }

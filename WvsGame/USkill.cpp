@@ -1,5 +1,6 @@
 #include "USkill.h"
-#include "..\Common\Net\InPacket.h"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
 #include "..\Database\GA_Character.hpp"
 #include "..\Database\GW_CharacterStat.h"
 #include "..\Database\GW_SkillRecord.h"
@@ -12,10 +13,10 @@
 #include "SkillInfo.h"
 #include "QWUSkillRecord.h"
 
-#include "WvsGameConstants.hpp"
-#include "Utility\DateTime\GameDateTime.h"
+#include "..\WvsLib\Constants\WvsGameConstants.hpp"
+#include "..\WvsLib\DateTime\GameDateTime.h"
 
-
+#include "..\WvsLib\Logger\WvsLogger.h"
 /*
 此MACRO作為註冊TemporaryStat(TS)用。
 每個TS一定都要先呼叫此MACRO後，再補上自己需要的屬性。
@@ -30,12 +31,14 @@ pRef = &pSS->m_mSetByTS[TemporaryStat::TS_##name]; pRef->second.clear();\
 pSS->n##name = bResetBySkill ? 0 : value;\
 pSS->r##name = bResetBySkill ? 0 : nSkillID;\
 pSS->t##name = bResetBySkill ? 0 : nDuration;\
+pSS->nLv##name = bResetBySkill ? 0 : nSLV;\
 if(!bResetBySkill)\
 {\
-	pRef->first = GameDateTime::GetTime();\
+	pRef->first = bForcedSetTime ? nForcedSetTime : GameDateTime::GetTime();\
 	pRef->second.push_back(&pSS->n##name);\
 	pRef->second.push_back(&pSS->r##name);\
 	pRef->second.push_back(&pSS->t##name);\
+	pRef->second.push_back(&pSS->nLv##name);\
 }\
 
 void USkill::OnSkillUseRequest(User * pUser, InPacket * iPacket)
@@ -116,7 +119,7 @@ void USkill::SendFailPacket(User* pUser)
 {
 }
 
-void USkill::DoActiveSkill_SelfStatChange(User* pUser, const SkillEntry * pSkill, int nSLV, InPacket * iPacket, int nOptionValue, bool bResetBySkill)
+void USkill::DoActiveSkill_SelfStatChange(User* pUser, const SkillEntry * pSkill, int nSLV, InPacket * iPacket, int nOptionValue, bool bResetBySkill, int nForcedSetTime, bool bForcedSetTime)
 {
 	nSLV = (nSLV > pSkill->GetMaxLevel() ? pSkill->GetMaxLevel() : nSLV);
 	auto pSkillLVLData = pSkill->GetLevelData(nSLV);
@@ -130,7 +133,7 @@ void USkill::DoActiveSkill_SelfStatChange(User* pUser, const SkillEntry * pSkill
 	auto pSS = pUser->GetSecondaryStat();
 	if (!pSkillLVLData) 
 	{
-		printf("[USkill::DoActiveSkill_SelfStatChange]異常的技能資訊，技能ID = %d，技能等級 = %d\n", pSkill->GetSkillID(), nSLV);
+		WvsLogger::LogFormat(WvsLogger::LEVEL_ERROR, "[USkill::DoActiveSkill_SelfStatChange]異常的技能資訊，技能ID = %d，技能等級 = %d\n", pSkill->GetSkillID(), nSLV);
 		return;
 	}
 	auto tsFlag = TemporaryStat::TS_Flag::GetDefault();

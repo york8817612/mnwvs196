@@ -68,19 +68,20 @@ public:
 	std::map<int, GW_QuestRecord*> mQuestRecord;
 	std::map<int, GW_QuestRecord*> mQuestComplete;
 	std::map<int, GW_ItemSlotBase*> mItemSlot[6];
+
 	std::map<int, int> mItemTrading[6];
 
 	void Load(int nCharacterID);
 	void LoadAvatar(int nCharacterID);
 	void Save(bool isNewCharacter = false);
 
-	void DecodeCharacterData(InPacket *iPacket);
+	void DecodeCharacterData(InPacket *iPacket, bool bToCenter);
 	void DecodeStat(InPacket *iPacket);
 	void DecodeInventoryData(InPacket *iPacket);
 	void DecodeAvatarLook(InPacket* iPacket);
 	void DecodeSkillRecord(InPacket* iPacket);
 
-	void EncodeCharacterData(OutPacket *oPacket);
+	void EncodeCharacterData(OutPacket *oPacket, bool bToCenter);
 	void EncodeInventoryData(OutPacket *oPacket);
 
 	void EncodeAvatar(OutPacket *oPacket);
@@ -93,6 +94,7 @@ public:
 
 	//GW_ItemSlot
 	GW_ItemSlotBase* GetItem(int nTI, int nPOS);
+	GW_ItemSlotBase* GetItemByID(int nItemID);
 	int FindEmptySlotPosition(int nTI);
 	void RemoveItem(int nTI, int nPOS);
 	int FindCashItemSlotPosition(int nTI, long long int liSN);

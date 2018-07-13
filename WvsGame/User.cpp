@@ -6,15 +6,12 @@
 #include "..\Database\GW_CharacterLevel.h"
 #include "..\Database\GW_CharacterMoney.h"
 #include "..\Database\GW_Avatar.hpp"
-
-#include "..\Common\Net\OutPacket.h"
-#include "..\Common\Net\InPacket.h"
-#include "..\Common\Net\PacketFlags\ClientPacketFlags.hpp"
-#include "..\Common\Net\PacketFlags\GamePacketFlags.hpp"
-#include "..\Common\Net\PacketFlags\UserPacketFlags.h"
-#include "..\Common\Net\PacketFlags\EPacketFlags.h"
-#include "..\Common\Net\PacketFlags\WvsContextPacketFlags.hpp"
-
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\PacketFlags\GamePacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\UserPacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\EPacketFlags.h"
+#include "..\WvsLib\Net\PacketFlags\WvsContextPacketFlags.hpp"
 #include "FieldMan.h"
 #include "Portal.h"
 #include "PortalMap.h"
@@ -25,13 +22,20 @@
 #include "BasicStat.h"
 #include "SecondaryStat.h"
 #include "USkill.h"
-#include "WvsGameConstants.hpp"
+#include "..\WvsLib\Constants\WvsGameConstants.hpp"
 #include "AttackInfo.h"
+#include "NpcTemplate.h"
 #include "LifePool.h"
 #include "SkillInfo.h"
 #include "CommandManager.h"
-#include "..\Common\Utility\DateTime\GameDateTime.h"
+#include "QuestMan.h"
+#include "QuestAct.h"
+#include "ActItem.h"
+#include "..\WvsLib\DateTime\GameDateTime.h"
+#include "..\WvsLib\Random\Rand32.h"
 
+#include "QWUQuestRecord.h"
+#include "InventoryManipulator.h"
 #include "ScriptMan.h"
 #include "Script.h"
 
@@ -69,7 +73,7 @@ void User::TryParsingDamageData(AttackInfo * pInfo, InPacket * iPacket)
 		for (int j = 0; j < nDamagedCountPerMob; ++j) 
 		{
 			long long int nDmg = iPacket->Decode8();
-			printf("Monster %d Damage : %d\n", nObjectID, (int)nDmg);
+			//printf("Monster %d Damage : %d\n", nObjectID, (int)nDmg);
 			ref.push_back(nDmg);
 		}
 		iPacket->Decode4();
@@ -253,32 +257,34 @@ AttackInfo * User::TryParsingBodyAttack(int nType, InPacket * iPacket)
 
 void User::OnIssueReloginCookie(InPacket * iPacket)
 {
-	MigrateOut();
+	OnMigrateOut();
 }
 
 User::User(ClientSocket *_pSocket, InPacket *iPacket)
-	: pSocket(_pSocket),
-	  pCharacterData(new GA_Character()),
+	: m_pSocket(_pSocket),
+	m_pCharacterData(new GA_Character()),
 	  m_pBasicStat(new BasicStat),
 	  m_pSecondaryStat(new SecondaryStat)
 {
-	pCharacterData->DecodeCharacterData(iPacket);
 	_pSocket->SetUser(this);
-	m_pField = (FieldMan::GetInstance()->GetField(pCharacterData->nFieldID));
-	m_pField->OnEnter(this);
-	auto bindT = std::bind(&User::Update, this);
-	auto pUpdateTimer = AsnycScheduler::CreateTask(bindT, 2000, true);
-	m_pUpdateTimer = pUpdateTimer;
-	pUpdateTimer->Start();
+	m_pCharacterData->DecodeCharacterData(iPacket, false);
+	m_pSecondaryStat->DecodeInternal(this, iPacket);
 }
 
 User::~User()
 {
 	OutPacket oPacket;
-	oPacket.Encode2(GamePacketFlag::RequestMigrateOut);
-	oPacket.Encode4(pSocket->GetSocketID());
+	oPacket.Encode2(GameSendPacketFlag::RequestMigrateOut);
+	oPacket.Encode4(m_pSocket->GetSocketID());
 	oPacket.Encode4(GetUserID());
-	pCharacterData->EncodeCharacterData(&oPacket);
+	m_pCharacterData->EncodeCharacterData(&oPacket, true);
+	if (m_nTransferStatus == TransferStatus::eOnTransferShop || m_nTransferStatus == TransferStatus::eOnTransferChannel) 
+	{
+		oPacket.Encode1(0); //bGameEnd
+		m_pSecondaryStat->EncodeInternal(this, &oPacket);
+	}
+	else
+		oPacket.Encode1(1); //bGameEnd, Dont decode and save the secondarystat info.
 	WvsGame::GetInstance<WvsGame>()->GetCenter()->SendPacket(&oPacket);
 
 	auto bindT = std::bind(&User::Update, this);
@@ -292,24 +298,29 @@ User::~User()
 	}
 	catch (...) {}
 
-	delete pCharacterData;
+	delete m_pCharacterData;
 	delete m_pBasicStat;
 	delete m_pSecondaryStat;
 }
 
 int User::GetUserID() const
 {
-	return pCharacterData->nCharacterID;
+	return m_pCharacterData->nCharacterID;
+}
+
+int User::GetChannelID() const
+{
+	return WvsBase::GetInstance<WvsGame>()->GetChannelID();
 }
 
 void User::SendPacket(OutPacket *oPacket)
 {
-	pSocket->SendPacket(oPacket);
+	m_pSocket->SendPacket(oPacket);
 }
 
 GA_Character * User::GetCharacterData()
 {
-	return pCharacterData;
+	return m_pCharacterData;
 }
 
 Field * User::GetField()
@@ -321,8 +332,8 @@ void User::MakeEnterFieldPacket(OutPacket *oPacket)
 {
 	oPacket->Encode2(EPacketFlags::SERVER_PACKET::LP_UserEnterField);
 	oPacket->Encode4(GetUserID());
-	oPacket->Encode1(pCharacterData->mLevel->nLevel);
-	oPacket->EncodeStr(pCharacterData->strName);
+	oPacket->Encode1(m_pCharacterData->mLevel->nLevel);
+	oPacket->EncodeStr(m_pCharacterData->strName);
 
 	//MapleQuestStatus ultExplorer = chr.getQuestNoAdd(MapleQuest.getInstance(111111));
 	/*if ((ultExplorer != null) && (ultExplorer.getCustomData() != null)) {
@@ -357,12 +368,12 @@ void User::MakeEnterFieldPacket(OutPacket *oPacket)
 	auto tsFlag = TemporaryStat::TS_Flag::GetDefault();
 	m_pSecondaryStat->EncodeForRemote(oPacket, tsFlag);
 
-	oPacket->Encode2(pCharacterData->mStat->nJob); // m_nJobCode
-	oPacket->Encode2(pCharacterData->mStat->nSubJob); // m_nSubJobCode
+	oPacket->Encode2(m_pCharacterData->mStat->nJob); // m_nJobCode
+	oPacket->Encode2(m_pCharacterData->mStat->nSubJob); // m_nSubJobCode
 	oPacket->Encode4(0);//[33 01 00 00] // m_nTotalCHUC
-	pCharacterData->EncodeAvatarLook(oPacket);
-	if (WvsGameConstants::IsZeroJob(pCharacterData->mStat->nJob)) {
-		pCharacterData->EncodeAvatarLook(oPacket);
+	m_pCharacterData->EncodeAvatarLook(oPacket);
+	if (WvsGameConstants::IsZeroJob(m_pCharacterData->mStat->nJob)) {
+		m_pCharacterData->EncodeAvatarLook(oPacket);
 	}
 
 	//PacketHelper.UnkFunctin6(mplew);
@@ -668,7 +679,7 @@ void User::OnPacket(InPacket *iPacket)
 void User::OnTransferFieldRequest(InPacket * iPacket)
 {
 	if (!m_pField)
-		pSocket->GetSocket().close();
+		m_pSocket->GetSocket().close();
 	iPacket->Decode1(); //ms_RTTI_CField ?
 	int dwFieldReturn = iPacket->Decode4();
 	std::string sPortalName = iPacket->DecodeStr();
@@ -678,6 +689,7 @@ void User::OnTransferFieldRequest(InPacket * iPacket)
 		iPacket->Decode2(); //not sure
 	}
 	std::lock_guard<std::mutex> user_lock(m_mtxUserlock);
+	SetTransferStatus(TransferStatus::eOnTransferField);
 	/*
 	if(m_character.characterStat.nHP == 0)
 	{
@@ -695,8 +707,41 @@ void User::OnTransferFieldRequest(InPacket * iPacket)
 		m_pField = pTargetField;
 		PostTransferField(m_pField->GetFieldID(), pTargetPortal, false);
 		m_pField->OnEnter(this);
-		pCharacterData->nFieldID = m_pField->GetFieldID();
+		m_pCharacterData->nFieldID = m_pField->GetFieldID();
+		SetTransferStatus(TransferStatus::eOnTransferNone);
 	}
+}
+
+void User::OnTransferChannelRequest(InPacket * iPacket)
+{
+	int nChannelID = iPacket->Decode1();
+
+	if (nChannelID == WvsBase::GetInstance<WvsGame>()->GetChannelID())
+	{
+		//SendTransferChannelIgnored
+	}
+	//Check if the server is connected.
+	//Check if the user can attach additional process.
+
+	SetTransferStatus(TransferStatus::eOnTransferChannel);
+	OutPacket oPacket;
+	oPacket.Encode2(GameSendPacketFlag::RequestTransferChannel);
+	oPacket.Encode4(m_pSocket->GetSocketID());
+	oPacket.Encode4(m_nCharacterID);
+	oPacket.Encode1(nChannelID);
+	WvsGame::GetInstance<WvsGame>()->GetCenter()->SendPacket(&oPacket);
+}
+
+void User::OnMigrateToCashShopRequest(InPacket * iPacket)
+{
+	//Check if the server is connected.
+	//Check if the user can attach additional process.
+	SetTransferStatus(TransferStatus::eOnTransferShop);
+	OutPacket oPacket;
+	oPacket.Encode2(GameSendPacketFlag::RequestTransferShop);
+	oPacket.Encode4(m_pSocket->GetSocketID());
+	oPacket.Encode4(m_nCharacterID);
+	WvsGame::GetInstance<WvsGame>()->GetCenter()->SendPacket(&oPacket);
 }
 
 void User::OnChat(InPacket *iPacket)
@@ -738,13 +783,13 @@ void User::PostTransferField(int dwFieldID, Portal * pPortal, int bForce)
 	oPacket.Encode1(0); //bUsingBuffProtector
 	oPacket.Encode4(dwFieldID);
 	oPacket.Encode1(pPortal == nullptr ? 0x80 : pPortal->GetID());
-	oPacket.Encode4(pCharacterData->mStat->nHP); //HP
+	oPacket.Encode4(m_pCharacterData->mStat->nHP); //HP
 
 	oPacket.Encode1(0);
 	oPacket.Encode1(0);
 	oPacket.Encode1(0);
 
-	oPacket.Encode8(std::time(nullptr));
+	oPacket.EncodeTime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 	oPacket.EncodeHexString("64 00 00 00 00 00 00 01 A6 00 00 00 03 00 00 00 83 7D 26 5A 02 00 00 24 66 00 00 00 00 00 03 00 00 00 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40 E0 FD 3B 37 4F 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 82 16 FB 52 01 00 00 24 0C 00 00 00 00 00 00 00 00 00 00 00 C8 00 00 00 F7 24 11 76 00 00 00 24 0C 00 00 00 01 00 00 24 02 00 00 24 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 96 00 00 00 00");
 	SendPacket(&oPacket);
 }
@@ -782,7 +827,7 @@ void User::OnAbilityUpRequest(InPacket *iPacket)
 			break;
 		case BasicStat::BS_MaxHP:
 		{
-			int nJob = pCharacterData->mStat->nJob;
+			int nJob = m_pCharacterData->mStat->nJob;
 			int maxhp = 0;
 			if (WvsGameConstants::IsBeginnerJob(nJob)) { // Beginner
 				maxhp = 8 + rand() % (12 - 8 + 1);
@@ -829,7 +874,7 @@ void User::OnAbilityUpRequest(InPacket *iPacket)
 		}
 		case BasicStat::BS_MaxMP:
 		{
-			int nJob = pCharacterData->mStat->nJob;
+			int nJob = m_pCharacterData->mStat->nJob;
 			int maxmp = 0;
 			if (WvsGameConstants::IsBeginnerJob(nJob))
 			{
@@ -886,7 +931,7 @@ void User::OnAbilityUpRequest(InPacket *iPacket)
 		}
 		default:
 		{
-			printf("Incorrect AP-Up stat Job(%d) : %d\n", pCharacterData->mStat->nJob, (int)dwFlaga);
+			printf("Incorrect AP-Up stat Job(%d) : %d\n", m_pCharacterData->mStat->nJob, (int)dwFlaga);
 			ValidateStat();
 			SendCharacterStat(true, 0);
 			return;
@@ -912,7 +957,7 @@ void User::OnDropMoneyRequest(InPacket *iPacket)
 	{
 		/*if (!CCheatInspector::InspectExclRequestTime(this->m_cheatInspector, this, tRequestTime, 200))
 			CVerboseObj::LogError(&pUser->vfptr, "Illegal ExclRequest : OnDropMoneyRequest");*/
-		if (this->pCharacterData->mLevel->nLevel <= 0xFu)
+		if (this->m_pCharacterData->mLevel->nLevel <= 0xFu)
 		{
 			/*CUser::CheckTradeLimitTime(pUser);*/
 			//int nTradeMoneyLimit = nAmounta + pUser->m_nTradeMoneyLimit;
@@ -981,11 +1026,11 @@ void User::OnCharacterInfoRequest(InPacket *iPacket)
 	oPacket.Encode2(EPacketFlags::LP_CharacterInfo);
 	oPacket.Encode4(GetUserID());
 	oPacket.Encode1(0); // Boolean
-	oPacket.Encode1(pCharacterData->mLevel->nLevel);
-	oPacket.Encode2(pCharacterData->mStat->nJob);
-	oPacket.Encode2(pCharacterData->mStat->nSubJob);
-	oPacket.Encode1(pCharacterData->mStat->nBattleRank);
-	oPacket.Encode4(pCharacterData->mStat->nPOP);
+	oPacket.Encode1(m_pCharacterData->mLevel->nLevel);
+	oPacket.Encode2(m_pCharacterData->mStat->nJob);
+	oPacket.Encode2(m_pCharacterData->mStat->nSubJob);
+	oPacket.Encode1(m_pCharacterData->mStat->nBattleRank);
+	oPacket.Encode4(m_pCharacterData->mStat->nPOP);
 	//MapleMarriage marriage = chr.getMarriage();
 	oPacket.Encode1(/*marriage != null && marriage.getId() != */0);
 	//if (marriage != null && marriage.getId() != 0) {
@@ -1135,11 +1180,11 @@ void User::OnAvatarModified()
 {
 	OutPacket oPacket;
 	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_UserAvatarModified);
-	oPacket.Encode4(nCharacterID);
+	oPacket.Encode4(m_nCharacterID);
 	int dwAvatarModFlag = 1;
 	oPacket.Encode1(dwAvatarModFlag); //m_dwAvatarModFlag
 	if (dwAvatarModFlag & 1)
-		this->pCharacterData->EncodeAvatarLook(&oPacket);
+		this->m_pCharacterData->EncodeAvatarLook(&oPacket);
 	if (dwAvatarModFlag & 2)
 		oPacket.Encode1(0); //secondayStat.nSpeed
 	if (dwAvatarModFlag & 4)
@@ -1154,6 +1199,11 @@ void User::OnAvatarModified()
 	oPacket.Encode4(0);
 
 	m_pField->BroadcastPacket(&oPacket);
+}
+
+void User::EncodeCharacterData(OutPacket * oPacket)
+{
+	m_pCharacterData->EncodeCharacterData(oPacket, false);
 }
 
 void User::EncodeCoupleInfo(OutPacket * oPacket)
@@ -1185,7 +1235,7 @@ void User::EncodeMarriageInfo(OutPacket * oPacket)
 	oPacket->Encode1(0);
 	for (int i = 0; i < 0; ++i)
 	{
-		oPacket->Encode4(nCharacterID); //
+		oPacket->Encode4(m_nCharacterID); //
 		oPacket->Encode4(0); //nPairID
 		oPacket->Encode4(0); //nItemID
 	}
@@ -1202,49 +1252,49 @@ void User::SendCharacterStat(bool bOnExclRequest, long long int liFlag)
 	oPacket.Encode1((char)bOnExclRequest);
 	oPacket.Encode8(liFlag);
 	if (liFlag & BasicStat::BasicStatFlag::BS_Skin)
-		oPacket.Encode1(pCharacterData->mAvatarData->nSkin);
+		oPacket.Encode1(m_pCharacterData->mAvatarData->nSkin);
 	if (liFlag & BasicStat::BasicStatFlag::BS_Face)
-		oPacket.Encode4(pCharacterData->mAvatarData->nFace);
+		oPacket.Encode4(m_pCharacterData->mAvatarData->nFace);
 	if (liFlag & BasicStat::BasicStatFlag::BS_Hair)
-		oPacket.Encode4(pCharacterData->mAvatarData->nHair);
+		oPacket.Encode4(m_pCharacterData->mAvatarData->nHair);
 	if (liFlag & BasicStat::BasicStatFlag::BS_Level)
-		oPacket.Encode1(pCharacterData->mLevel->nLevel);
+		oPacket.Encode1(m_pCharacterData->mLevel->nLevel);
 	if (liFlag & BasicStat::BasicStatFlag::BS_Job)
 	{
-		oPacket.Encode2(pCharacterData->mStat->nJob);
-		oPacket.Encode2(pCharacterData->mStat->nSubJob);
+		oPacket.Encode2(m_pCharacterData->mStat->nJob);
+		oPacket.Encode2(m_pCharacterData->mStat->nSubJob);
 	}
 
 	if (liFlag & BasicStat::BasicStatFlag::BS_STR)
-		oPacket.Encode2(pCharacterData->mStat->nStr);
+		oPacket.Encode2(m_pCharacterData->mStat->nStr);
 	if (liFlag & BasicStat::BasicStatFlag::BS_DEX)
-		oPacket.Encode2(pCharacterData->mStat->nDex);
+		oPacket.Encode2(m_pCharacterData->mStat->nDex);
 	if (liFlag & BasicStat::BasicStatFlag::BS_INT)
-		oPacket.Encode2(pCharacterData->mStat->nInt);
+		oPacket.Encode2(m_pCharacterData->mStat->nInt);
 	if (liFlag & BasicStat::BasicStatFlag::BS_LUK)
-		oPacket.Encode2(pCharacterData->mStat->nLuk);
+		oPacket.Encode2(m_pCharacterData->mStat->nLuk);
 	if (liFlag & BasicStat::BasicStatFlag::BS_HP)
-		oPacket.Encode4(pCharacterData->mStat->nHP);
+		oPacket.Encode4(m_pCharacterData->mStat->nHP);
 	if (liFlag & BasicStat::BasicStatFlag::BS_MaxHP)
-		oPacket.Encode4(pCharacterData->mStat->nMaxHP);
+		oPacket.Encode4(m_pCharacterData->mStat->nMaxHP);
 	if (liFlag & BasicStat::BasicStatFlag::BS_MP)
-		oPacket.Encode4(pCharacterData->mStat->nMP);
+		oPacket.Encode4(m_pCharacterData->mStat->nMP);
 	if (liFlag & BasicStat::BasicStatFlag::BS_MaxMP)
-		oPacket.Encode4(pCharacterData->mStat->nMaxMP);
+		oPacket.Encode4(m_pCharacterData->mStat->nMaxMP);
 
 	if (liFlag & BasicStat::BasicStatFlag::BS_AP)
-		oPacket.Encode2(pCharacterData->mStat->nAP);
+		oPacket.Encode2(m_pCharacterData->mStat->nAP);
 
 	//not done yet.
 	if (liFlag & BasicStat::BasicStatFlag::BS_SP)
-		pCharacterData->mStat->EncodeExtendSP(&oPacket);
+		m_pCharacterData->mStat->EncodeExtendSP(&oPacket);
 
 	if (liFlag & BasicStat::BasicStatFlag::BS_EXP)
-		oPacket.Encode8(pCharacterData->mStat->nExp);
+		oPacket.Encode8(m_pCharacterData->mStat->nExp);
 	if (liFlag & BasicStat::BasicStatFlag::BS_POP)
-		oPacket.Encode4(pCharacterData->mStat->nPOP);
+		oPacket.Encode4(m_pCharacterData->mStat->nPOP);
 	if (liFlag & BasicStat::BasicStatFlag::BS_Meso)
-		oPacket.Encode8(pCharacterData->mMoney->nMoney);
+		oPacket.Encode8(m_pCharacterData->mMoney->nMoney);
 
 	oPacket.Encode1(0);
 	oPacket.Encode1(0);
@@ -1348,19 +1398,29 @@ void User::OnUserActivateNickItem(InPacket * iPacket)
 
 	OutPacket oPacket;
 	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_UserSetActiveNickItem);
-	oPacket.Encode4(pCharacterData->nCharacterID);
+	oPacket.Encode4(m_pCharacterData->nCharacterID);
 	oPacket.Encode4(nItem);
 	SendPacket(&oPacket);
 }
 
-void User::MigrateOut()
+void User::OnMigrateOut()
 {
-	pCharacterData->Save();
+	m_pCharacterData->Save();
 	LeaveField();
 	OutPacket oPacket;
 	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ReturnToTitle);
 	SendPacket(&oPacket);
 
+}
+
+void User::SetTransferStatus(TransferStatus e)
+{
+	m_nTransferStatus = e;
+}
+
+User::TransferStatus User::GetTransferStatus() const
+{
+	return m_nTransferStatus;
 }
 
 User * User::FindUser(int nUserID)
@@ -1444,32 +1504,65 @@ void User::OnScriptMessageAnswer(InPacket * iPacket)
 void User::OnScriptRun()
 {
 	std::unique_lock<std::mutex> lock(m_scriptLock);
-	m_cndVariable.wait(lock);
+	m_cvForScript.wait(lock);
 
 	delete m_pScript;
 }
 
 void User::OnScriptDone()
 {
-	m_cndVariable.notify_all();
+	m_cvForScript.notify_all();
 }
 
 void User::OnQuestRequest(InPacket * iPacket)
 {
 	char nAction = iPacket->Decode1();
 	int nQuestID = iPacket->Decode4(), tTick, nItemID, nNpcID;
+	NpcTemplate* pNpcTemplate = nullptr;
+	Npc* pNpc = nullptr;
+	if (nAction != 0 && nAction != 3)
+	{
+		nNpcID = iPacket->Decode4();
+		pNpcTemplate = NpcTemplate::GetNpcTemplate(nNpcID);
+		
+		//if (pNpcTemplate == nullptr) // Invalid NPC Template
+		//	return;
+
+		/*if (!QuestMan::GetInstance()->IsAutoStartQuest(nQuestID))
+		{
+			pNpc = m_pField->GetLifePool()->GetNpc(nNpcID);
+			if (!pNpc) // the npc not existed in this field
+				return;
+			auto rangeX = pNpc->GetPosX() - this->GetPosX();
+			auto rangeY = pNpc->GetPosY() - this->GetPosY();
+
+			if (abs(rangeX) > 1920 || abs(rangeY) > 1080)
+			{
+				WvsLogger::LogFormat(WvsLogger::LEVEL_ERROR, "玩家%s疑似使用不當方式進行任務。任務 ID = %d, Npc ID = %d\n",
+					this->m_pCharacterData->strName.c_str(),
+					nQuestID,
+					nNpcID);
+				return;
+			}
+		}*/
+	}
+
+	WvsLogger::LogFormat("OnQuestRequest npc id = %d, quest action = %d\n", nNpcID, (int)nAction);
 	switch (nAction)
 	{
 	case 0:
 		tTick = iPacket->Decode4();
 		nItemID = iPacket->Decode4();
+		OnLostQuestItem(iPacket, nQuestID);
 		break;
 	case 1:
-		nNpcID = iPacket->Decode4();
+		OnAcceptQuest(iPacket, nQuestID, nNpcID, pNpc);
 		break;
 	case 2:
+		OnCompleteQuest(iPacket, nQuestID, nNpcID, pNpc, QuestMan::GetInstance()->IsAutoCompleteQuest(nQuestID));
 		break;
 	case 3:
+		OnResignQuest(iPacket, nQuestID);
 		break;
 	case 4:
 		break;
@@ -1480,18 +1573,245 @@ void User::OnQuestRequest(InPacket * iPacket)
 
 void User::OnAcceptQuest(InPacket * iPacket, int nQuestID, int dwTemplateID, Npc * pNpc)
 {
+	if (!QuestMan::GetInstance()->CheckStartDemand(nQuestID, this))
+	{
+		WvsLogger::LogFormat(WvsLogger::LEVEL_ERROR, "[OnAcceptQuest]無法通過任務需求檢測，玩家名稱: %s, 任務ID: %d\n",
+			m_pCharacterData->strName.c_str(),
+			nQuestID);
+		SendQuestResult(7, 0, 0);
+		return;
+	}
+	WvsLogger::LogFormat(WvsLogger::LEVEL_INFO, "任務檢測成功。\n");
+	TryQuestStartAct(nQuestID, pNpc);
 }
 
 void User::OnCompleteQuest(InPacket * iPacket, int nQuestID, int dwTemplateID, Npc * pNpc, bool bIsAutoComplete)
 {
+	if (!QuestMan::GetInstance()->CheckCompleteDemand(nQuestID, this))
+	{
+		WvsLogger::LogFormat(WvsLogger::LEVEL_ERROR, "[OnCompleteQuest]無法通過任務需求檢測，玩家名稱: %s, 任務ID: %d\n",
+			m_pCharacterData->strName.c_str(),
+			nQuestID);
+		SendQuestResult(7, 0, 0);
+		return;
+	}
+	WvsLogger::LogFormat(WvsLogger::LEVEL_INFO, "任務檢測成功。\n");
+	TryQuestCompleteAct(nQuestID, pNpc);
 }
 
 void User::OnResignQuest(InPacket * iPacket, int nQuestID)
 {
+	QWUQuestRecord::Remove(this, nQuestID, QWUQuestRecord::GetState(this, nQuestID) == 2);
 }
 
 void User::OnLostQuestItem(InPacket * iPacket, int nQuestID)
 {
+}
+
+void User::TryQuestStartAct(int nQuestID, Npc * pNpc)
+{
+	auto pStartAct = QuestMan::GetInstance()->GetStartAct(nQuestID);
+	if (!pStartAct)
+		return;
+	TryExchange(pStartAct->aActItem);
+	QWUQuestRecord::Set(this, nQuestID, pStartAct->sInfo);
+}
+
+void User::TryQuestCompleteAct(int nQuestID, Npc * pNpc)
+{
+	auto pCompleteAct = QuestMan::GetInstance()->GetCompleteAct(nQuestID);
+	if (!pCompleteAct)
+		return;
+	TryExchange(pCompleteAct->aActItem);
+	QWUQuestRecord::SetComplete(this, nQuestID);
+}
+
+void User::TryExchange(const std::vector<ActItem*>& aActItem)
+{
+	std::vector<std::pair<int, int>> randItem;
+	int nRandWeight = 0, nSelectedItemID = 0;
+	for (auto& pItem : aActItem)
+	{
+		if (pItem->nProp > 0 && AllowToGetQuestItem(pItem)) 
+		{
+			randItem.push_back({ pItem->nProp, pItem->nItemID });
+			nRandWeight += pItem->nProp;
+		}
+	}
+	if (randItem.size() > 0) 
+	{
+		int randPos = Rand32::GetInstance()->Random() % nRandWeight;
+		for(auto& rndItem : randItem)
+			if ((randPos -= rndItem.first) <= 0)
+			{
+				nSelectedItemID = rndItem.second;
+				break;
+			}
+	}
+	for (auto& pItem : aActItem)
+	{
+		if (!AllowToGetQuestItem(pItem))
+			continue;
+		int nItemID = pItem->nItemID;
+		if (pItem->nProp != 0 && nItemID != nSelectedItemID)
+			continue;
+		int nCount = pItem->nCount;
+		if (nCount < 0)
+			QWUInventory::RawRemoveItemByID(this, nItemID, nCount);
+		else
+			QWUInventory::RawAddItemByID(this, nItemID, nCount);
+	}
+}
+
+bool User::AllowToGetQuestItem(const ActItem * pActionItem)
+{
+	if (pActionItem->nGender != 2 && pActionItem->nGender >= 0 && pActionItem->nGender != this->m_pBasicStat->nGender)
+		return false;
+	auto lmdCheckJob = [&](int encoded, int job) 
+	{
+		if ((encoded & 0x1) != 0) 
+		{
+			if ((0) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x2) != 0) 
+		{
+			if ((100) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x4) != 0) 
+		{
+			if ((200) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x8) != 0) 
+		{
+			if ((300) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x10) != 0) 
+		{
+			if ((400) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x20) != 0) 
+		{
+			if ((500) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x400) != 0) 
+		{
+			if ((1000) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x800) != 0) 
+		{
+			if ((1100) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x1000) != 0)
+		{
+			if ((1200) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x2000) != 0) 
+		{
+			if ((1300) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x4000) != 0) 
+		{
+			if ((1400) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x8000) != 0)
+		{
+			if ((1500) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x20000) != 0) 
+		{
+			if ((2001) / 100 == job / 100)
+				return true;
+			if ((2200) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x100000) != 0) 
+		{
+			if ((2000) / 100 == job / 100)
+				return true;
+			if ((2001) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x200000) != 0) 
+		{
+			if ((2100) / 100 == job / 100)
+				return true;
+		}
+		if ((encoded & 0x400000) != 0) 
+		{
+			if ((2001) / 100 == job / 100)
+				return true;
+			if ((2200) / 100 == job / 100)
+				return true;
+		}
+
+		if ((encoded & 0x40000000) != 0)
+		{
+			if ((3000) / 100 == job / 100)
+				return true;
+			if ((3200) / 100 == job / 100)
+				return true;
+			if ((3300) / 100 == job / 100)
+				return true;
+			if ((3500) / 100 == job / 100)
+				return true;
+		}
+		return false;
+	};
+	auto lmdCheckJobEx = [&](int encoded, int job) 
+	{
+		if ((encoded & 0x1) != 0) 
+		{
+			if (((200) / 100) % 10 == (job / 100) % 10)
+				return true;
+		}
+		if ((encoded & 0x2) != 0) 
+		{
+			if (((300) / 100) % 10 == (job / 100) % 10)
+				return true;
+		}
+		if ((encoded & 0x4) != 0) 
+		{
+			if (((400) / 100) % 10 == (job / 100) % 10)
+				return true;
+		}
+		if ((encoded & 0x8) != 0) 
+		{
+			if (((500) / 100) % 10 == (job / 100) % 10)
+				return true;
+		}
+		return false;
+	};
+	if (pActionItem->nJob > 0) 
+	{
+		if (!lmdCheckJob(pActionItem->nJob, m_pBasicStat->nJob)
+			&& !lmdCheckJobEx(pActionItem->nJobEx, m_pBasicStat->nJob))
+			return false;
+	}
+	return true;
+}
+
+void User::SendQuestResult(int nResult, int nQuestID, int dwTemplateID)
+{
+	OutPacket oPacket;
+	oPacket.Encode2((short)UserSendPacketFlag::UserLocal_OnMessage);
+	oPacket.Encode1(nResult);
+	oPacket.Encode4(nQuestID);
+	oPacket.Encode4(dwTemplateID);
+	oPacket.Encode4(0);
+	oPacket.Encode1(0);
+	SendPacket(&oPacket);
 }
 
 void User::SendQuestRecordMessage(int nKey, int nState, const std::string & sStringRecord)
@@ -1513,9 +1833,31 @@ void User::SendQuestRecordMessage(int nKey, int nState, const std::string & sStr
 			oPacket.Encode8(GameDateTime::GetTime());
 			break;
 	}
+	SendPacket(&oPacket);
 }
 
 void User::LeaveField()
 {
 	m_pField->OnLeave(this);
+}
+
+void User::OnMigrateIn()
+{
+	OutPacket oPacket;
+	oPacket.Encode2(UserSendPacketFlag::UserLocal_OnEventNameTag);
+	for (int i = 0; i < 5; ++i)
+	{
+		oPacket.EncodeStr("");
+		oPacket.Encode1(-1);
+	}
+	SendPacket(&oPacket);
+	SendCharacterStat(true, 0);
+
+	m_pField = (FieldMan::GetInstance()->GetField(m_pCharacterData->nFieldID));
+	m_pField->OnEnter(this);
+	auto bindT = std::bind(&User::Update, this);
+	auto pUpdateTimer = AsnycScheduler::CreateTask(bindT, 2000, true);
+	m_pUpdateTimer = pUpdateTimer;
+	pUpdateTimer->Start();
+	SetTransferStatus(TransferStatus::eOnTransferNone);
 }

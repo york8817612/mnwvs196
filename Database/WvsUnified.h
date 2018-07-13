@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "Poco\Data\Session.h"
+#include "Poco\Data\SessionPool.h"
 #include "Poco\Data\RecordSet.h"
 
 #define GET_DB_SESSION WvsUnified::GetInstance()->GetDBSession()
@@ -13,7 +14,7 @@
 class WvsUnified
 {
 private:
-	Poco::Data::Session mDBSession;
+	Poco::Data::SessionPool mDBSessionPool;
 
 public:
 	typedef Poco::Data::RecordSet ResultType;
@@ -29,10 +30,7 @@ public:
 		return pInstance;
 	}
 
-	Poco::Data::Session& GetDBSession()
-	{
-		return mDBSession;
-	}
+	Poco::Data::Session GetDBSession();
 
 	static FILETIME ftDB_DATE_19000101_23()
 	{

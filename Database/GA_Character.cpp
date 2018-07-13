@@ -1,7 +1,7 @@
 #include "GA_Character.hpp"
 #include "WvsUnified.h"
-#include "..\Common\Net\OutPacket.h"
-#include "..\WvsGame\WvsGameConstants.hpp"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Constants\WvsGameConstants.hpp"
 #include "GW_ItemSlotEquip.h"
 #include "GW_ItemSlotBundle.h"
 #include "GW_CharacterStat.h"
@@ -25,7 +25,6 @@ GA_Character::GA_Character()
 
 GA_Character::~GA_Character()
 {
-	printf("Destruct Data Called\n");
 	delete mAvatarData;
 	delete mStat;
 	delete mLevel;
@@ -235,6 +234,10 @@ void GA_Character::Save(bool isNewCharacter)
 
 	for (auto& skill : mSkillRecord)
 		skill.second->Save();
+	for (auto& questRecord : mQuestRecord)
+		questRecord.second->Save();
+	for (auto& questRecord : mQuestComplete)
+		questRecord.second->Save();
 }
 
 int GA_Character::FindEmptySlotPosition(int nTI)
@@ -265,6 +268,24 @@ GW_ItemSlotBase* GA_Character::GetItem(int nTI, int nPOS)
 	if (result == mItemSlot[nTI].end())
 		return nullptr;
 	return result->second;
+}
+
+GW_ItemSlotBase * GA_Character::GetItemByID(int nItemID)
+{
+	int nTI = nItemID / 10000000;
+	if (nTI <= 0 || nTI > 5)
+		return nullptr;
+	auto itemSlot = mItemSlot[nTI];
+	for (auto& slot : itemSlot)
+	{
+		if (slot.first < 0) //skip equipped
+			continue;
+		if (slot.first >= 10000)
+			return nullptr;
+		if (slot.second->nItemID == nItemID)
+			return slot.second;
+	}
+	return nullptr;
 }
 
 void GA_Character::RemoveItem(int nTI, int nPOS)
@@ -371,6 +392,7 @@ void GA_Character::SetQuest(int nKey, const std::string & sInfo)
 		pNewRecord->nState = 1;
 		pNewRecord->nQuestID = nKey;
 		pNewRecord->sStringRecord = sInfo;
+		mQuestRecord.insert({ nKey, pNewRecord });
 	}
 	else
 		findIter->second->sStringRecord = sInfo;
@@ -386,7 +408,7 @@ std::mutex & GA_Character::GetCharacterDatLock()
 	return mCharacterLock;
 }
 
-void GA_Character::DecodeCharacterData(InPacket *iPacket)
+void GA_Character::DecodeCharacterData(InPacket *iPacket, bool bToCenter)
 {
 	long long int flag = iPacket->Decode8();
 	iPacket->Decode1();
@@ -907,7 +929,7 @@ void GA_Character::DecodeSkillRecord(InPacket * iPacket)
 	}
 }
 
-void GA_Character::EncodeCharacterData(OutPacket *oPacket)
+void GA_Character::EncodeCharacterData(OutPacket *oPacket, bool bToCenter)
 {
 	long long int flag = 0xFFFFFFFFFFFFFFFF 	;
 	oPacket->Encode8(flag);
@@ -981,6 +1003,7 @@ void GA_Character::EncodeCharacterData(OutPacket *oPacket)
 
 	if (flag & 0x200)
 	{
+		//oPacket->EncodeHexString("01 51 00 CE 74 00 00 00 00 82 69 00 00 01 00 31 84 69 00 00 01 00 31 C5 05 00 00 0A 00 63 6F 75 6E 74 3D 31 30 30 30 78 64 00 00 00 00 38 7C 00 00 00 00 5F 38 00 00 00 00 2C 3B 00 00 03 00 30 30 30 57 71 00 00 00 00 A5 81 00 00 00 00 A6 81 00 00 00 00 DB 81 00 00 00 00 F1 81 00 00 00 00 F3 81 00 00 00 00 84 99 00 00 03 00 30 30 30 85 99 00 00 03 00 30 30 30 86 99 00 00 03 00 30 30 30 87 99 00 00 03 00 30 30 30 88 99 00 00 03 00 30 30 30 89 99 00 00 03 00 30 30 30 8A 99 00 00 03 00 30 30 30 8B 99 00 00 03 00 30 30 30 8C 99 00 00 03 00 30 30 30 8D 99 00 00 03 00 30 30 30 8E 99 00 00 03 00 30 30 30 8F 99 00 00 03 00 30 30 30 90 99 00 00 03 00 30 30 30 91 99 00 00 03 00 30 30 30 92 99 00 00 03 00 30 30 30 93 99 00 00 03 00 30 30 30 94 99 00 00 03 00 30 30 30 95 99 00 00 03 00 30 30 30 96 99 00 00 03 00 30 30 30 97 99 00 00 03 00 30 30 30 98 99 00 00 03 00 30 30 30 99 99 00 00 03 00 30 30 30 9A 99 00 00 03 00 30 30 30 9B 99 00 00 03 00 30 30 30 9C 99 00 00 03 00 30 30 30 9D 99 00 00 03 00 30 30 30 9E 99 00 00 03 00 30 30 30 9F 99 00 00 03 00 30 30 30 A0 99 00 00 03 00 30 30 30 A1 99 00 00 03 00 30 30 30 A2 99 00 00 03 00 30 30 30 A3 99 00 00 03 00 30 30 30 A4 99 00 00 03 00 30 30 30 A5 99 00 00 03 00 30 30 30 A6 99 00 00 03 00 30 30 30 A7 99 00 00 03 00 30 30 30 A8 99 00 00 03 00 30 30 30 A9 99 00 00 03 00 30 30 30 AA 99 00 00 03 00 30 30 30 AB 99 00 00 03 00 30 30 30 AC 99 00 00 03 00 30 30 30 AD 99 00 00 03 00 30 30 30 AE 99 00 00 03 00 30 30 30 AF 99 00 00 03 00 30 30 30 B0 99 00 00 06 00 30 30 30 30 30 30 B1 99 00 00 03 00 30 30 30 B2 99 00 00 03 00 30 30 30 B3 99 00 00 03 00 30 30 30 B4 99 00 00 03 00 30 30 30 B5 99 00 00 03 00 30 30 30 B6 99 00 00 03 00 30 30 30 B7 99 00 00 06 00 30 30 30 30 30 30 B8 99 00 00 06 00 30 30 30 30 30 30 BA 99 00 00 03 00 30 30 30 BB 99 00 00 03 00 30 30 30 BC 99 00 00 06 00 30 30 30 30 30 30 BD 99 00 00 06 00 30 30 30 30 30 30 BE 99 00 00 03 00 30 30 30 BF 99 00 00 03 00 30 30 30 C1 99 00 00 03 00 30 30 30 C2 99 00 00 03 00 30 30 30 C3 99 00 00 06 00 30 30 30 30 30 30 C4 99 00 00 03 00 30 30 30 CC 74 00 00 00 00 CD 74 00 00 00 00 CF 74 00 00 00 00 F0 7D 00 00 00 00 00 00");
 		oPacket->Encode1(1);
 		oPacket->Encode2((short)mQuestRecord.size());
 		for (auto& record : mQuestRecord)
@@ -990,6 +1013,7 @@ void GA_Character::EncodeCharacterData(OutPacket *oPacket)
 
 	if (flag & 0x4000)
 	{
+		//oPacket->EncodeHexString("01 07 00 C6 05 00 00 90 5D D3 01 00 00 00 00 C2 05 00 00 F6 5F D3 01 00 00 00 00 C3 05 00 00 F6 5F D3 01 00 00 00 00 C4 05 00 00 F6 5F D3 01 00 00 00 00 BA 05 00 00 90 5D D3 01 00 00 00 00 B9 05 00 00 F6 5F D3 01 00 00 00 00 FA 49 00 00 92 5C D3 01 00 00 00 00");
 		oPacket->Encode1(1);
 		oPacket->Encode2((short)mQuestComplete.size());
 		for (auto& record : mQuestComplete)
@@ -1020,6 +1044,7 @@ void GA_Character::EncodeCharacterData(OutPacket *oPacket)
 
 	if (flag & 0x4000) //QUEST INFO
 	{
+		//oPacket->EncodeHexString("05 00 7A 69 00 00 10 00 65 6E 74 65 72 3D 30 30 30 31 30 30 30 30 30 30 78 69 00 00 1A 00 65 6E 74 65 72 3D 31 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 BE 05 00 00 1B 00 6F 6E 3D 31 3B 72 65 6D 61 69 6E 3D 30 3B 65 78 70 3D 35 30 30 30 30 30 30 30 30 BF 05 00 00 1B 00 6F 6E 3D 31 3B 72 65 6D 61 69 6E 3D 30 3B 65 78 70 3D 35 30 30 30 30 30 30 30 30 C0 05 00 00 1B 00 6F 6E 3D 31 3B 72 65 6D 61 69 6E 3D 30 3B 65 78 70 3D 35 30 30 30 30 30 30 30 30");
 		oPacket->Encode2(0);
 	}
 

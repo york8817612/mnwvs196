@@ -4,10 +4,12 @@
 #include "..\Database\GA_Character.hpp"
 #include "..\Database\GW_CharacterStat.h"
 #include "QWUser.h"
-#include "..\ScriptLib\lvm.h"
-#include "..\Common\Net\InPacket.h"
-#include "..\Common\Net\OutPacket.h"
-#include "..\Common\Net\PacketFlags\EPacketFlags.h"
+#include "..\WvsLib\Script\lvm.h"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Net\PacketFlags\EPacketFlags.h"
+
+#include "..\WvsLib\Logger\WvsLogger.h"
 
 luaL_Reg Script::SelfMetatable[] = {
 	{ "askAvatar", SelfAskAvatar },
@@ -16,6 +18,7 @@ luaL_Reg Script::SelfMetatable[] = {
 	{ "askNumber", SelfAskNumber },
 	{ "askMenu", SelfAskMenu },
 	{ "sayNext", SelfSayNext },
+	{ "sayNextGroup", SelfSayNextGroup },
 	{ "say", SelfSay },
 	{ "pushArray", SelfPushArray },
 	{ NULL, NULL }
@@ -34,9 +37,9 @@ Script * Script::GetSelf(lua_State * L)
 void Script::Wait()
 {
 	std::unique_lock<std::mutex> lock(m_mtxWaitLock);
-	printf("Ready to wait\n");
+	WvsLogger::LogRaw("Ready to wait\n");
 	m_cndVariable.wait(lock);
-	printf("Finish wait\n");
+	WvsLogger::LogRaw("Finish wait\n");
 }
 
 void Script::Notify()
@@ -56,7 +59,7 @@ Script::Script(const std::string & file, int nNpcID) :
 	lua_setglobal(L, "userPtr");
 	LuaRegisterSelf(L);
 	if (luaL_loadfile(L, m_fileName.c_str()))
-		std::cout << "Error, can't open script" << std::endl;
+		WvsLogger::LogRaw(WvsLogger::LEVEL_ERROR, "Error, can't open script.\n");
 }
 
 int Script::LuaRegisterSelf(lua_State * L)
@@ -78,6 +81,40 @@ std::thread * Script::GetThread()
 void Script::SetThread(std::thread * pThread)
 {
 	m_pThread = pThread;
+}
+
+int Script::SelfSayNextGroup(lua_State * L)
+{
+	Script* self = luaW_check<Script>(L, 1); //+1
+	int nPages = lua_gettop(L); //+1
+
+	//note that the index should start from 2
+	for (int i = 2; i <= nPages; )
+	{
+		auto msg = lua_tostring(L, i);
+		WvsLogger::LogFormat(WvsLogger::LEVEL_INFO, "SelfSayNextGroup Args %d = %s\n", i, msg);
+		OutPacket oPacket;
+		oPacket.Encode2(0x56E); //opcode
+		oPacket.Encode1(4);
+		oPacket.Encode4(self->m_nID);
+		oPacket.Encode1(0);
+		oPacket.Encode1((char)ScriptType::OnSay); //OnSay
+		oPacket.Encode2(0);
+		oPacket.Encode1(0);
+		oPacket.EncodeStr(msg); //message
+		oPacket.Encode1(i > 2 ? 1 : 0); //show next page
+		oPacket.Encode1(i < nPages ? 1 : 0); //show prev page
+		oPacket.Encode4(0);
+		self->m_pUser->SendPacket(&oPacket);
+
+		self->Wait();
+		i += (self->m_nUserInput == 0 ? -1 : 1);
+		if (i < 2)
+			break;
+	}
+
+	lua_pushstring(L, "");
+	return 1;
 }
 
 int Script::SelfSay(lua_State * L)
@@ -106,7 +143,11 @@ int Script::SelfAskAvatar(lua_State * L)
 {
 	Script* self = luaW_check<Script>(L, 1);
 	const char* text = luaL_checkstring(L, 2);
-	self->m_nUserInput = luaL_checkinteger(L, 3);
+	self->m_nUserInput = (int)luaL_checkinteger(L, 3); //ticket
+	int nArgs = lua_gettop(L);
+	self->m_aArrayObj.clear();
+	for (int i = 4; i < nArgs; ++i)
+		self->m_aArrayObj.push_back((int)lua_tointeger(L, i));
 	OutPacket oPacket;
 	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);
@@ -227,8 +268,8 @@ int Script::SelfSayNext(lua_State * L)
 {
 	Script* self = luaW_check<Script>(L, 1);
 	const char* text = luaL_checkstring(L, 2);
-	int nCurPage = (int)luaL_checkinteger(L, 3);
-	int nNextPage = (int)luaL_checkinteger(L, 4);
+	int nCurPage = 1;
+	int nNextPage = 1;
 	OutPacket oPacket;
 	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage);
 	oPacket.Encode1(4);

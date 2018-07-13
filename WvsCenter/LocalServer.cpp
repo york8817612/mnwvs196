@@ -1,16 +1,18 @@
 
 #include "../Database/CharacterDBAccessor.h"
 #include "LocalServer.h"
-#include "Net/InPacket.h"
-#include "Net/OutPacket.h"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
 
-#include "Net/PacketFlags/LoginPacketFlags.hpp"
-#include "Net/PacketFlags/CenterPacketFlags.hpp"
-#include "Net/PacketFlags/GamePacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\LoginPacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\CenterPacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\ShopPacketFlags.hpp"
+#include "..\WvsLib\Net\PacketFlags\GamePacketFlags.hpp"
 
-#include "Constants/ServerConstants.hpp"
+#include "..\WvsLib\Constants\ServerConstants.hpp"
 #include "WvsCenter.h"
-
+#include "WvsWorld.h"
+#include "UserTransferStatus.h"
 
 LocalServer::LocalServer(asio::io_service& serverService)
 	: SocketBase(serverService, true)
@@ -28,28 +30,36 @@ void LocalServer::OnClosed()
 
 void LocalServer::OnPacket(InPacket *iPacket)
 {
-	printf("[WvsCenter][LocalServer::OnPacket]封包接收：");
+	WvsLogger::LogRaw("[WvsCenter][LocalServer::OnPacket]封包接收：");
 	iPacket->Print();
 	int nType = (unsigned short)iPacket->Decode2();
 	switch (nType)
 	{
-		case LoginPacketFlag::RegisterCenterRequest:
+		case LoginSendPacketFlag::Center_RegisterCenterRequest:
 			OnRegisterCenterRequest(iPacket);
 			break;
-		case LoginPacketFlag::RequestCharacterList:
+		case LoginSendPacketFlag::Center_RequestCharacterList:
 			OnRequestCharacterList(iPacket);
 			break;
-		case LoginPacketFlag::RequestCreateNewCharacter:
+		case LoginSendPacketFlag::Center_RequestCreateNewCharacter:
 			OnRequestCreateNewCharacter(iPacket);
 			break;
-		case LoginPacketFlag::RequestGameServerInfo:
+		case LoginSendPacketFlag::Center_RequestGameServerInfo:
 			OnRequestGameServerInfo(iPacket);
 			break;
-		case GamePacketFlag::RequestMigrateIn:
+		case GameSendPacketFlag::RequestMigrateIn:
 			OnRequestMigrateIn(iPacket);
 			break;
-		case GamePacketFlag::RequestMigrateOut:
+		case ShopSendPacketFlag::RequestMigrateOut:
+		case GameSendPacketFlag::RequestMigrateOut:
 			OnRequestMigrateOut(iPacket);
+			break;
+		case ShopSendPacketFlag::RequestTransferToGame:
+		case GameSendPacketFlag::RequestTransferChannel:
+			OnRequestTransferChannel(iPacket);
+			break;
+		case GameSendPacketFlag::RequestTransferShop:
+			OnRequestMigrateCashShop(iPacket);
 			break;
 	}
 }
@@ -58,26 +68,32 @@ void LocalServer::OnRegisterCenterRequest(InPacket *iPacket)
 {
 	auto serverType = iPacket->Decode1();
 	SetServerType(serverType);
-	printf("[WvsCenter][LocalServer::OnRegisterCenterRequest]收到新的[%s]連線請求。\n", (serverType == ServerConstants::SVR_LOGIN ? "WvsLogin" : "WvsGame"));
+	const char* pInstanceName = (serverType == ServerConstants::SRV_LOGIN ? "WvsLogin" : (serverType == ServerConstants::SRV_GAME ? "WvsGame" : "WvsShop"));
+	WvsLogger::LogFormat("[WvsCenter][LocalServer::OnRegisterCenterRequest]收到新的[%s][%d]連線請求。\n", pInstanceName, serverType);
 
-	if (serverType == ServerConstants::SVR_GAME)
+	if (serverType == ServerConstants::SRV_GAME)
 	{
 		WvsBase::GetInstance<WvsCenter>()->RegisterChannel(shared_from_this(), iPacket);
 		WvsBase::GetInstance<WvsCenter>()->NotifyWorldChanged();
 	}
 
 	OutPacket oPacket;
-	oPacket.Encode2(CenterPacketFlag::RegisterCenterAck);
+	oPacket.Encode2(CenterSendPacketFlag::RegisterCenterAck);
 	oPacket.Encode1(1); //Success;
-	if (serverType == ServerConstants::SVR_LOGIN)
+	if (serverType == ServerConstants::SRV_LOGIN)
 	{
-		auto pWorld = WvsBase::GetInstance<WvsCenter>();
+		auto pWorld = WvsWorld::GetInstance();
 		oPacket.Encode1(pWorld->GetWorldInfo().nWorldID);
 		oPacket.Encode1(pWorld->GetWorldInfo().nEventType);
 		oPacket.EncodeStr(pWorld->GetWorldInfo().strWorldDesc);
 		oPacket.EncodeStr(pWorld->GetWorldInfo().strEventDesc);
+		WvsBase::GetInstance<WvsCenter>()->NotifyWorldChanged();
 		//printf("[LocalServer::OnRegisterCenterRequest]Encoding World Information.\n");
 	}
+	
+	if (serverType == ServerConstants::SRV_SHOP)
+		WvsBase::GetInstance<WvsCenter>()->RegisterCashShop(shared_from_this(), iPacket);
+
 	SendPacket(&oPacket);
 }
 
@@ -85,7 +101,9 @@ void LocalServer::OnRequestCharacterList(InPacket *iPacket)
 {
 	int nLoginSocketID = iPacket->Decode4();
 	int nAccountID = iPacket->Decode4();
-	CharacterDBAccessor::GetInstance()->PostLoadCharacterListRequest(this, nLoginSocketID, nAccountID, WvsBase::GetInstance<WvsCenter>()->GetWorldInfo().nWorldID);
+	int nChannelID = iPacket->Decode1();
+	if(WvsBase::GetInstance<WvsCenter>()->GetChannel(nChannelID) != nullptr)
+		CharacterDBAccessor::GetInstance()->PostLoadCharacterListRequest(this, nLoginSocketID, nAccountID, WvsWorld::GetInstance()->GetWorldInfo().nWorldID);
 }
 
 void LocalServer::OnRequestCreateNewCharacter(InPacket *iPacket)
@@ -122,7 +140,7 @@ void LocalServer::OnRequestCreateNewCharacter(InPacket *iPacket)
 		this, 
 		nLoginSocketID, 
 		nAccountID, 
-		WvsBase::GetInstance<WvsCenter>()->GetWorldInfo().nWorldID, 
+		WvsWorld::GetInstance()->GetWorldInfo().nWorldID, 
 		strName, 
 		nGender, 
 		nFace, 
@@ -136,20 +154,20 @@ void LocalServer::OnRequestGameServerInfo(InPacket *iPacket)
 {
 	int nLoginSocketID = iPacket->Decode4();
 	int nWorldID = iPacket->Decode4();
-	if (nWorldID != WvsBase::GetInstance<WvsCenter>()->GetWorldInfo().nWorldID)
+	if (nWorldID != WvsWorld::GetInstance()->GetWorldInfo().nWorldID)
 	{
-		printf("[WvsCenter][LocalServer::OnRequstGameServerInfo]異常：客戶端嘗試連線至不存在的頻道伺服器[WvsGame]。\n");
+		WvsLogger::LogRaw(WvsLogger::LEVEL_ERROR, "[WvsCenter][LocalServer::OnRequstGameServerInfo]異常：客戶端嘗試連線至不存在的頻道伺服器[WvsGame]。\n");
 		return;
 	}
 	int nChannelID = iPacket->Decode4();
 	int nCharacterID = iPacket->Decode4();
 	
 	OutPacket oPacket;
-	oPacket.Encode2(CenterPacketFlag::GameServerInfoResponse);
+	oPacket.Encode2(CenterSendPacketFlag::GameServerInfoResponse);
 	oPacket.Encode4(nLoginSocketID);
 	oPacket.Encode2(0);
-	oPacket.Encode4(WvsBase::GetInstance<WvsCenter>()->GetChannel(nChannelID).GetExternalIP());
-	oPacket.Encode2(WvsBase::GetInstance<WvsCenter>()->GetChannel(nChannelID).GetExternalPort());
+	oPacket.Encode4(WvsBase::GetInstance<WvsCenter>()->GetChannel(nChannelID)->GetExternalIP());
+	oPacket.Encode2(WvsBase::GetInstance<WvsCenter>()->GetChannel(nChannelID)->GetExternalPort());
 	oPacket.Encode4(0);
 	oPacket.Encode2(0);
 	oPacket.Encode4(0);
@@ -158,6 +176,7 @@ void LocalServer::OnRequestGameServerInfo(InPacket *iPacket)
 	oPacket.Encode1(0);
 	oPacket.Encode4(0);
 
+	WvsWorld::GetInstance()->ClearUserTransferStatus(nCharacterID);
 	SendPacket(&oPacket);
 }
 
@@ -165,7 +184,23 @@ void LocalServer::OnRequestMigrateIn(InPacket *iPacket)
 {
 	int nClientSocketID = iPacket->Decode4();
 	int nCharacterID = iPacket->Decode4();
-	CharacterDBAccessor::GetInstance()->PostCharacterDataRequest(this, nClientSocketID, nCharacterID);
+	OutPacket oPacket;
+	oPacket.Encode2(CenterSendPacketFlag::CenterMigrateInResult);
+	oPacket.Encode4(nClientSocketID);
+	CharacterDBAccessor::GetInstance()->PostCharacterDataRequest(this, nClientSocketID, nCharacterID, &oPacket); // for WvsGame
+	auto pUserTransferStatus = WvsWorld::GetInstance()->GetUserTransferStatus(nCharacterID);
+
+	WvsLogger::LogFormat("OnRequestMigrateIn, has transfer status ? %d\n", (pUserTransferStatus != nullptr));
+	if (pUserTransferStatus == nullptr)
+		oPacket.Encode1(0);
+	else
+	{
+		oPacket.Encode1(1);
+		pUserTransferStatus->Encode(&oPacket);
+		//WvsWorld::GetInstance()->ClearUserTransferStatus(nCharacterID);
+	}
+	//CharacterDBAccessor::GetInstance()->PostCharacterDataRequest(this, nClientSocketID, nCharacterID, &oPacket); // for Client
+	this->SendPacket(&oPacket);
 }
 
 void LocalServer::OnRequestMigrateOut(InPacket * iPacket)
@@ -173,4 +208,56 @@ void LocalServer::OnRequestMigrateOut(InPacket * iPacket)
 	int nClientSocketID = iPacket->Decode4();
 	int nCharacterID = iPacket->Decode4();
 	CharacterDBAccessor::GetInstance()->OnCharacterSaveRequest(iPacket);
+	bool bGameEnd = iPacket->Decode1() == 1 ? true : false;
+	WvsLogger::LogFormat("OnRequestMigrateOut is game end = %d\n", bGameEnd == true ? 1 : 0);
+	if (!bGameEnd)
+	{
+		UserTransferStatus* pStatus = new UserTransferStatus;
+		pStatus->Decode(iPacket);
+		WvsWorld::GetInstance()->SetUserTransferStatus(nCharacterID, pStatus);
+	}
+	else
+		WvsWorld::GetInstance()->ClearUserTransferStatus(nCharacterID);
+}
+
+void LocalServer::OnRequestTransferChannel(InPacket * iPacket)
+{
+	WvsLogger::LogRaw("OnRequestTransferChannel\n");
+	int nClientSocketID = iPacket->Decode4();
+	int nCharacterID = iPacket->Decode4();
+	int nChannelID = iPacket->Decode1();
+	auto pEntry = WvsBase::GetInstance<WvsCenter>()->GetChannel(nChannelID);
+	OutPacket oPacket;
+	oPacket.Encode2(CenterSendPacketFlag::TransferChannelResult);
+	oPacket.Encode4(nClientSocketID);
+	oPacket.Encode1((pEntry != nullptr ? 1 : 0)); //bSuccess
+	if (pEntry != nullptr)
+	{
+		oPacket.Encode1(1);
+		oPacket.Encode4(pEntry->GetExternalIP());
+		oPacket.Encode2(pEntry->GetExternalPort());
+		oPacket.Encode4(0);
+	}
+	this->SendPacket(&oPacket);
+}
+
+void LocalServer::OnRequestMigrateCashShop(InPacket * iPacket)
+{
+	int nClientSocketID = iPacket->Decode4();
+	int nCharacterID = iPacket->Decode4();
+	OutPacket oPacket;
+	oPacket.Encode2(CenterSendPacketFlag::MigrateCashShopResult);
+	oPacket.Encode4(nClientSocketID);
+	auto pEntry = WvsBase::GetInstance<WvsCenter>()->GetShop();
+	if (WvsBase::GetInstance<WvsCenter>()->GetShop() == nullptr)
+		oPacket.Encode1(0); //bSuccess
+	else
+	{
+		oPacket.Encode1(1);
+		oPacket.Encode1(1);
+		oPacket.Encode4(pEntry->GetExternalIP());
+		oPacket.Encode2(pEntry->GetExternalPort());
+		oPacket.Encode4(0);
+	}
+	this->SendPacket(&oPacket);
 }

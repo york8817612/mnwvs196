@@ -2,11 +2,11 @@
 #include <thread>
 #include <iostream>
 #include <functional>
-#include "Net\OutPacket.h"
-#include "Utility\Task\AsnycScheduler.h"
-
-#include "Constants\ConfigLoader.hpp"
-#include "Constants\ServerConstants.hpp"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Task\AsnycScheduler.h"
+#include "..\WvsLib\Logger\WvsLogger.h"
+#include "..\WvsLib\Constants\ConfigLoader.hpp"
+#include "..\WvsLib\Constants\ServerConstants.hpp"
 
 WvsLogin::WvsLogin()
 {
@@ -17,51 +17,60 @@ WvsLogin::~WvsLogin()
 {
 }
 
+int WvsLogin::GetCenterCount() const
+{
+	return m_nCenterCount;
+}
+
+std::shared_ptr<Center>& WvsLogin::GetCenter(int idx)
+{
+	return m_apCenterInstance[idx];
+}
+
 void WvsLogin::ConnectToCenter(int nCenterIdx)
 {
-	aCenterServerService[nCenterIdx].reset( new asio::io_service() );		
-	aCenterList[nCenterIdx] = std::make_shared<Center>(*aCenterServerService[nCenterIdx]);
-	aCenterList[nCenterIdx]->SetDisconnectedNotifyFunc(&Center::OnNotifyCenterDisconnected);
-	aCenterList[nCenterIdx]->SetCenterIndex(nCenterIdx);
-	aCenterList[nCenterIdx]->OnConnectToCenter(
+	m_apCenterInstance[nCenterIdx]->SetSocketDisconnectedCallBack(std::bind(&Center::OnNotifyCenterDisconnected, m_apCenterInstance[nCenterIdx].get()));
+	m_apCenterInstance[nCenterIdx]->SetCenterIndex(nCenterIdx);
+	m_apCenterInstance[nCenterIdx]->Connect(
 		ConfigLoader::GetInstance()->StrValue("Center" + std::to_string(nCenterIdx) + "_IP"),
 		ConfigLoader::GetInstance()->IntValue("Center" + std::to_string(nCenterIdx) + "_Port")
 	);
-	//if (aCenterList[nCenterIdx]->IsConnected()) {
-		asio::io_service::work work(*aCenterServerService[nCenterIdx]);
-		std::error_code ec;
-		aCenterServerService[nCenterIdx]->run(ec);
-	//}
 }
 
-void WvsLogin::CenterAliveMonitor()
+void WvsLogin::CenterAliveMonitor(int nCenterIndex)
 {
-	printf("=================定期檢查Center Server連線程序=================\n");
-	int centerSize = ConfigLoader::GetInstance()->IntValue("CenterCount");
-	for (int i = 0; i < centerSize; ++i)
-		if (aCenterList[i] && aCenterList[i]->IsConnectionFailed()) {
-			aCenterList[i].reset();
-			aCenterServerService[i]->stop();
-			printf("Center Server %d 連線失敗，嘗試重新連線。\n", i);
-			if (aCenterWorkThread[i]) 
-			{
-				aCenterWorkThread[i]->detach();
-				*aCenterWorkThread[i] = std::thread(&WvsLogin::ConnectToCenter, this, i);
-			}
-			//
-		}
+	if (m_apCenterInstance[nCenterIndex]->CheckSocketStatus(SocketBase::SocketStatus::eConnecting))
+		return;
+	WvsLogger::LogRaw(WvsLogger::LEVEL_WARNING, "=================定期檢查Center Server連線程序=================\n");
+
+	if (m_apCenterInstance[nCenterIndex] && (m_apCenterInstance[nCenterIndex]->CheckSocketStatus(SocketBase::SocketStatus::eClosed)))
+	{
+		WvsLogger::LogFormat("Center Server %d 連線失敗，嘗試重新連線。\n", nCenterIndex);
+
+		m_apCenterWorkThread[nCenterIndex]->detach();
+		*m_apCenterWorkThread[nCenterIndex] = (std::thread(&WvsLogin::ConnectToCenter, this, nCenterIndex));
+	}
 }
 
 void WvsLogin::InitializeCenter()
 {
-	int centerSize = ConfigLoader::GetInstance()->IntValue("CenterCount");
-	for (int i = 0; i < centerSize; ++i)
-		aCenterWorkThread[i].reset(new std::thread(&WvsLogin::ConnectToCenter, this, i));
+	m_nCenterCount = ConfigLoader::GetInstance()->IntValue("CenterCount");
+	for (int i = 0; i < m_nCenterCount; ++i)
+	{
+		aCenterServerService[i].reset(new asio::io_service());
+		m_apCenterInstance[i] = std::make_shared<Center>(*aCenterServerService[i]);
+		m_apCenterWorkThread[i].reset(new std::thread(&WvsLogin::ConnectToCenter, this, i));
+		auto fHolderFunc = std::bind(&WvsLogin::CenterAliveMonitor, this, i);
+		auto pAliveHolder = AsnycScheduler::CreateTask(fHolderFunc, 10 * 100, true);
 
-	//Periodic Task, 檢測是否與Center中斷連線，並嘗試修正
-	auto holderFunc = std::bind(&WvsLogin::CenterAliveMonitor, this);
-	auto aliveHolder = AsnycScheduler::CreateTask(holderFunc, 3 * 100, true);
-	aliveHolder->Start();
+		std::thread tCenterWorkThread([&] {
+			asio::io_service::work work(*aCenterServerService[i]);
+			std::error_code ec;
+			aCenterServerService[i]->run(ec);
+		});
+		tCenterWorkThread.detach();
+		pAliveHolder->Start();
+	}
 }
 
 void WvsLogin::OnNotifySocketDisconnected(SocketBase *pSocket)

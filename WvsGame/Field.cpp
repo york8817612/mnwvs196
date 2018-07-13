@@ -1,9 +1,10 @@
 #include "Field.h"
 #include "LifePool.h"
-#include "Net\PacketFlags\MobPacketFlags.hpp"
-#include "Net\PacketFlags\EPacketFlags.h"
-#include "Net\InPacket.h"
-#include "Net\OutPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
+#include "..\WvsLib\Net\PacketFlags\EPacketFlags.h"
+#include "..\WvsLib\Net\PacketFlags\UserPacketFlags.hpp"
+#include "..\WvsLib\Net\InPacket.h"
+#include "..\WvsLib\Net\OutPacket.h"
 #include "Mob.h"
 #include "MovePath.h"
 #include "PortalMap.h"
@@ -251,7 +252,7 @@ void Field::OnPacket(User* pUser, InPacket *iPacket)
 {
 	int nType = iPacket->Decode2();
 	
-	if (nType >= MobRecvPacketFlag::MobRecvPacketFlag::minFlag && nType <= MobRecvPacketFlag::MobRecvPacketFlag::maxFlag)
+	if (nType >= EPacketFlags::CLIENT_PACKET::CP_BEGIN_MOB && nType <= EPacketFlags::CLIENT_PACKET::CP_END_MOB)
 	{
 		//printf("Mob Packet Received %d.\n", (int)nType);
 		m_pLifePool->OnPacket(pUser, nType, iPacket);
