@@ -246,7 +246,7 @@ void Mob::OnMobHit(User * pUser, long long int nDamage, int nAttackType)
 		OutPacket oPacket;
 		oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_MobHPIndicator);
 		oPacket.Encode4(GetFieldObjectID());
-		oPacket.Encode1((char)((GetHp() / GetMobTemplate()->m_lnMaxHP) * 100));
+		oPacket.Encode1((char)(((GetHp() * 100) / GetMobTemplate()->m_lnMaxHP)));
 		pUser->SendPacket(&oPacket);
 	}
 }

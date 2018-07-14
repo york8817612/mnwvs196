@@ -16,6 +16,7 @@ public:
 		return sPtrFieldMan;
 	}
 
+	void Initialize();
 	void RegisterField(int nFieldID);
 	void FieldFactory(int nFieldID);
 	Field* GetField(int nFieldID);

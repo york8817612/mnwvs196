@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "QuestMan.h"
+#include "FieldMan.h"
 #include <functional>
 
 #include "ClientSocket.h"
@@ -107,6 +108,11 @@ int main(int argc, char **argv)
 	ItemInfo::GetInstance()->Initialize();
 	try {
 		SkillInfo::GetInstance()->IterateSkillInfo();
+	}
+	catch (...) {}
+
+	try {
+		FieldMan::GetInstance()->Initialize();
 	}
 	catch (...) {}
 

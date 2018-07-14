@@ -31,7 +31,7 @@ void ItemInfo::Initialize()
 
 	static auto& eqpWz = stWzResMan->GetWz(Wz::Character);
 	WvsLogger::LogRaw("[ItemInfo::Initialize]開始載入所有裝備[IterateEquipItem Start]....\n");
-	//IterateEquipItem(&eqpWz);
+	IterateEquipItem(&eqpWz);
 	WvsLogger::LogRaw("[ItemInfo::Initialize]裝備載入完成[IterateEquipItem Done]....\n");
 
 	WvsLogger::LogRaw("[ItemInfo::Initialize]開始載入所有物品[IterateBundleItem Start]....\n");

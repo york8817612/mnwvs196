@@ -274,7 +274,7 @@ void Field::OnUserMove(User * pUser, InPacket * iPacket)
 	auto& lastElem = movePath.m_lElem.rbegin();
 	pUser->SetMovePosition(lastElem->x, lastElem->y, lastElem->bMoveAction, lastElem->fh);
 	OutPacket oPacket;
-	oPacket.Encode2(0x295);
+	oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_UserMove);
 	oPacket.Encode4(pUser->GetUserID());
 	movePath.Encode(&oPacket);
 	BroadcastPacket(&oPacket);

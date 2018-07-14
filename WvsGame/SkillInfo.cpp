@@ -432,7 +432,7 @@ void SkillInfo::LoadLevelData(int nSkillID, SkillEntry * pEntry, void * pData)
 			*(((int*)&(pLevelData->m_nLevelDataPtrBase)) + p.first) = (int)eval.Eval();
 		}
 	}
-	printf("Test%d", nSkillID);
+	//printf("Test%d", nSkillID);
 	delete[] apLevelData;
 }
 

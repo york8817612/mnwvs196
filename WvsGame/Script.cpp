@@ -94,7 +94,7 @@ int Script::SelfSayNextGroup(lua_State * L)
 		auto msg = lua_tostring(L, i);
 		WvsLogger::LogFormat(WvsLogger::LEVEL_INFO, "SelfSayNextGroup Args %d = %s\n", i, msg);
 		OutPacket oPacket;
-		oPacket.Encode2(0x56E); //opcode
+		oPacket.Encode2(EPacketFlags::SERVER_PACKET::LP_ScriptMessage); //opcode
 		oPacket.Encode1(4);
 		oPacket.Encode4(self->m_nID);
 		oPacket.Encode1(0);

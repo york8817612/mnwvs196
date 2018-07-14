@@ -148,6 +148,8 @@ class Script
 		InGameDirectionEvent_ForcedMove = 0xF,
 		InGameDirectionEvent_ForcedFlip = 0x10,
 		InGameDirectionEvent_InputUI = 0x11,
+		InGameDirectionEvent_Unk196Add1 = 0x12,
+		InGameDirectionEvent_Unk196Add2 = 0x13,
 	};
 
 	friend class ScriptMan;

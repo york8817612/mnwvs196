@@ -149,9 +149,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="ActItem.h" />
     <ClInclude Include="ActQuest.h" />
     <ClInclude Include="ActSkill.h" />

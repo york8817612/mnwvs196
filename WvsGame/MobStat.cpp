@@ -34,7 +34,7 @@ MobStat::TS_Flag::TS_Flag(int dwFlagValue)
 void MobStat::TS_Flag::Encode(OutPacket * oPacket)
 {
 	for (int i = 0; i < FLAG_COUNT; ++i) {
-		printf("Encode TS Flag : [%d] = %d\n", i, m_aData[i]);
+		//printf("Encode TS Flag : [%d] = %d\n", i, m_aData[i]);
 		oPacket->Encode4(m_aData[i]);
 	}
 }
@@ -90,20 +90,6 @@ void MobStat::EncodeTemporary(OutPacket *oPacket, TS_Flag & dwFlag, int tCur) {
 			oPacket->Encode2(tValue - tCur / 500); // t
 		}
 	}
-	//for (MonsterStatusEffect buff : buffs) {
-	//	mobstat.add(buff.getStati());
-	//	if (buff.getStati().getBitNumber() < MonsterStatus.M_Burned.getBitNumber()) {
-	//		oPacket->Encode4(buff.getX()); // n
-	//		if (buff.getMobSkill() != null) {
-	//			oPacket->Encode2(buff.getMobSkill().getSkillId());
-	//			oPacket->Encode2(buff.getMobSkill().getSkillLevel());
-	//		}
-	//		else {
-	//			oPacket->Encode4(buff.getSkill() > 0 ? buff.getSkill() : 0); // r
-	//		}
-	//		oPacket->Encode2((short)((buff.getCancelTask() - System.currentTimeMillis()) / 1000)); //t
-	//	}
-	//}
 	if (CHECK_MS_NORML(dwFlag, MobStatNumbers::MOB_STAT_PDR)) {
 		oPacket->Encode4(0); // c
 	}

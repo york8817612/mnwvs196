@@ -4,7 +4,6 @@
 #include "..\WvsLib\Net\PacketFlags\MobPacketFlags.hpp"
 #include "..\WvsLib\Net\PacketFlags\UserPacketFlags.hpp"
 #include "..\WvsLib\Net\PacketFlags\MobPacketFlags.hpp"
-//#include "..\WvsLib\Net\PacketFlags\UserPacketFlags.h"
 #include "..\WvsLib\Net\PacketFlags\EPacketFlags.h"
 
 #include "..\WvsLib\Logger\WvsLogger.h"

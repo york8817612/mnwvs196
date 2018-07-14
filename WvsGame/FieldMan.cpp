@@ -17,6 +17,23 @@ FieldMan::~FieldMan()
 {
 }
 
+void FieldMan::Initialize() {
+	/*WvsLogger::LogRaw("[FieldMan::Initialize]開始載入所有地圖[RegisterAllField Start]....\n");
+	auto& mapWz = stWzResMan->GetWz(Wz::Map)["Map"];
+	for (auto& mapWzNode : mapWz)
+	{
+		if (mapWzNode.Name().find("Map") == 0)
+		{
+			for (auto& mapWzSubNode : mapWzNode)
+			{
+				RegisterField(atoi(mapWzSubNode.Name().c_str()));
+			}
+		}
+	}
+	stWzResMan->ReleaseMemory();
+	WvsLogger::LogRaw("[FieldMan::Initialize]所有地圖載入完成[RegisterAllField Done]....\n");*/
+}
+
 void FieldMan::RegisterField(int nFieldID)
 {
 	std::lock_guard<std::mutex> guard(fieldManMutex);
